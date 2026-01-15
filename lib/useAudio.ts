@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 
-const TRACKS = Array.from({ length: 12 }, (_, i) => ({
+const TRACKS = Array.from({ length: 16 }, (_, i) => ({
   id: i + 1,
   name: `Focus ${i + 1}`,
   src: `/audio/focus-${i + 1}.mp3`,
