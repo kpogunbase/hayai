@@ -1,19 +1,63 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { UploadDropzone } from "@/components/UploadDropzone";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { UserMenu } from "@/components/UserMenu";
+import { PaywallModal } from "@/components/PaywallModal";
+import { useAuth } from "@/components/AuthProvider";
 import { parseFile } from "@/lib/parse";
 import { tokenize } from "@/lib/tokenize";
+import {
+  getLocalUsage,
+  incrementLocalUsage,
+  hasExceededLocalLimit,
+  incrementDbUsage,
+  hasExceededDbLimit,
+} from "@/lib/usage";
 
-export default function HomePage() {
+function HomePageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user, subscription, isLoading: authLoading } = useAuth();
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // Check for success/canceled from Stripe redirect
+  useEffect(() => {
+    if (searchParams.get("success") === "true") {
+      setShowSuccess(true);
+      // Clear the URL params
+      window.history.replaceState({}, "", "/");
+    }
+  }, [searchParams]);
+
+  const isSubscribed = subscription?.status === "active";
 
   const handleFileSelected = useCallback(
     async (file: File) => {
+      // Check usage limits before processing
+      if (!isSubscribed) {
+        if (user) {
+          // Authenticated user - check DB
+          const exceeded = await hasExceededDbLimit(user.id);
+          if (exceeded) {
+            setShowPaywall(true);
+            return;
+          }
+        } else {
+          // Anonymous user - check localStorage
+          if (hasExceededLocalLimit()) {
+            setShowPaywall(true);
+            return;
+          }
+        }
+      }
+
       setIsLoading(true);
       setError(null);
 
@@ -30,19 +74,39 @@ export default function HomePage() {
           return;
         }
 
+        // Increment usage (only if not subscribed)
+        if (!isSubscribed) {
+          if (user) {
+            await incrementDbUsage(user.id);
+          } else {
+            incrementLocalUsage();
+          }
+        }
+
         // Store tokens in sessionStorage for the reader page
         sessionStorage.setItem("hayai_tokens", JSON.stringify(tokens));
 
         // Navigate to reader
         router.push("/reader");
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Failed to process file.";
+        const message =
+          err instanceof Error ? err.message : "Failed to process file.";
         setError(message);
         setIsLoading(false);
       }
     },
-    [router]
+    [router, user, isSubscribed]
   );
+
+  // Calculate remaining uploads
+  const getRemainingUploads = () => {
+    if (isSubscribed) return "Unlimited";
+    if (authLoading) return "...";
+
+    const used = user ? 0 : getLocalUsage(); // For anonymous, we show local. DB check happens on upload.
+    const remaining = Math.max(0, 3 - used);
+    return remaining;
+  };
 
   return (
     <main
@@ -53,16 +117,51 @@ export default function HomePage() {
         backgroundColor: "var(--bg-primary)",
       }}
     >
-      {/* Header with theme toggle */}
+      {/* Header */}
       <header
         style={{
           display: "flex",
-          justifyContent: "flex-end",
+          justifyContent: "space-between",
+          alignItems: "center",
           padding: "16px 24px",
         }}
       >
         <ThemeToggle />
+        <UserMenu onUpgradeClick={() => setShowPaywall(true)} />
       </header>
+
+      {/* Success message */}
+      {showSuccess && (
+        <div
+          style={{
+            margin: "0 24px",
+            padding: "12px 16px",
+            backgroundColor: "rgba(34, 197, 94, 0.1)",
+            border: "1px solid rgba(34, 197, 94, 0.2)",
+            borderRadius: "8px",
+            color: "#22c55e",
+            fontSize: "14px",
+            textAlign: "center",
+          }}
+        >
+          Welcome to Hayai Pro! You now have unlimited uploads.
+          <button
+            onClick={() => setShowSuccess(false)}
+            style={{
+              marginLeft: "12px",
+              padding: "2px 8px",
+              fontSize: "12px",
+              color: "inherit",
+              backgroundColor: "transparent",
+              border: "1px solid currentColor",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Main content */}
       <div
@@ -113,6 +212,59 @@ export default function HomePage() {
             error={error}
           />
 
+          {/* Usage info */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginTop: "20px",
+              padding: "12px 16px",
+              backgroundColor: "var(--bg-secondary)",
+              borderRadius: "8px",
+              fontSize: "13px",
+            }}
+          >
+            <span style={{ color: "var(--text-secondary)" }}>
+              {isSubscribed ? (
+                <>
+                  <span style={{ color: "var(--accent)", fontWeight: 600 }}>
+                    Pro
+                  </span>{" "}
+                  — Unlimited uploads
+                </>
+              ) : (
+                <>Uploads remaining: {getRemainingUploads()}</>
+              )}
+            </span>
+            {!isSubscribed && (
+              <button
+                onClick={() => setShowPaywall(true)}
+                style={{
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "var(--accent)",
+                  backgroundColor: "transparent",
+                  border: "1px solid var(--accent)",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "var(--accent)";
+                  e.currentTarget.style.color = "#fff";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                  e.currentTarget.style.color = "var(--accent)";
+                }}
+              >
+                Upgrade
+              </button>
+            )}
+          </div>
+
           {/* Footer hint */}
           <p
             style={{
@@ -126,6 +278,17 @@ export default function HomePage() {
           </p>
         </div>
       </div>
+
+      {/* Paywall Modal */}
+      <PaywallModal isOpen={showPaywall} onClose={() => setShowPaywall(false)} />
     </main>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: "100vh", backgroundColor: "var(--bg-primary)" }} />}>
+      <HomePageContent />
+    </Suspense>
   );
 }
