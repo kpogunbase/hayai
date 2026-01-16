@@ -49,6 +49,7 @@ const shortcutGroups: ShortcutGroup[] = [
   {
     title: "Other",
     shortcuts: [
+      { keys: ["F"], description: "Send feedback" },
       { keys: ["?"], description: "Show this help" },
     ],
   },

@@ -9,6 +9,7 @@ import { PaywallModal } from "@/components/PaywallModal";
 import { Footer } from "@/components/Footer";
 import { LibraryPanel } from "@/components/library/LibraryPanel";
 import { PasteTextModal } from "@/components/upload/PasteTextModal";
+import { FeedbackModal } from "@/components/FeedbackModal";
 import { OnboardingOverlay, DEMO_TEXT } from "@/components/onboarding/OnboardingOverlay";
 import { useAuth } from "@/components/AuthProvider";
 import { parseFile } from "@/lib/parse";
@@ -40,6 +41,7 @@ function HomePageContent() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [inputMethod, setInputMethod] = useState<InputMethod>("upload");
   const [showPasteModal, setShowPasteModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   // Library state
   const isLibraryOpen = useLibraryStore((s) => s.isOpen);
@@ -72,7 +74,7 @@ function HomePageContent() {
     }
   }, [searchParams]);
 
-  // Keyboard shortcut for library (L)
+  // Keyboard shortcuts (L for library, F for feedback)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger if typing in an input
@@ -85,8 +87,13 @@ function HomePageContent() {
 
       if (e.key.toLowerCase() === "l") {
         setLibraryOpen(!isLibraryOpen);
+      } else if (e.key.toLowerCase() === "f") {
+        e.preventDefault();
+        setShowFeedbackModal(true);
       } else if (e.key === "Escape") {
-        if (showPasteModal) {
+        if (showFeedbackModal) {
+          setShowFeedbackModal(false);
+        } else if (showPasteModal) {
           setShowPasteModal(false);
         } else if (isLibraryOpen) {
           setLibraryOpen(false);
@@ -96,7 +103,7 @@ function HomePageContent() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isLibraryOpen, setLibraryOpen, showPasteModal]);
+  }, [isLibraryOpen, setLibraryOpen, showPasteModal, showFeedbackModal]);
 
   // Process and navigate to reader
   const processAndNavigate = useCallback(
@@ -346,6 +353,44 @@ function HomePageContent() {
               <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
             </svg>
             Library
+          </button>
+          {/* Feedback button */}
+          <button
+            onClick={() => setShowFeedbackModal(true)}
+            title="Send Feedback (F)"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "8px 12px",
+              fontSize: "14px",
+              color: "var(--text-secondary)",
+              backgroundColor: "var(--bg-secondary)",
+              border: "1px solid var(--border)",
+              borderRadius: "8px",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
+              e.currentTarget.style.color = "var(--text-primary)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
+              e.currentTarget.style.color = "var(--text-secondary)";
+            }}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            Feedback
           </button>
         </div>
         <UserMenu onUpgradeClick={() => setShowPaywall(true)} />
@@ -689,7 +734,7 @@ function HomePageContent() {
               textAlign: "center",
             }}
           >
-            Press <kbd style={kbdStyle}>L</kbd> to open Library
+            Press <kbd style={kbdStyle}>L</kbd> to open Library, <kbd style={kbdStyle}>F</kbd> for Feedback
           </p>
         </div>
       </div>
@@ -711,6 +756,13 @@ function HomePageContent() {
 
       {/* Paywall Modal */}
       <PaywallModal isOpen={showPaywall} onClose={() => setShowPaywall(false)} />
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+        page="home"
+      />
 
       {/* Onboarding Overlay */}
       {!onboardingLoading && (

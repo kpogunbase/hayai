@@ -11,6 +11,7 @@ import { ModeSelector, ReaderMode } from "@/components/ModeSelector";
 import { SidePanel } from "@/components/sidepanel/SidePanel";
 import { LibraryPanel } from "@/components/library/LibraryPanel";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
+import { FeedbackModal } from "@/components/FeedbackModal";
 import { CelebrationOverlay, useCelebration } from "@/components/CelebrationOverlay";
 import { OnboardingOverlay } from "@/components/onboarding/OnboardingOverlay";
 import { useAudio } from "@/lib/useAudio";
@@ -54,6 +55,7 @@ export default function ReaderPage() {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
 
   // Celebration hook
   const { celebration, celebrate, clear: clearCelebration } = useCelebration();
@@ -425,9 +427,15 @@ export default function ReaderPage() {
           e.preventDefault();
           handleToggleHighlight();
           break;
+        case "KeyF":
+          e.preventDefault();
+          setIsFeedbackModalOpen(true);
+          break;
         case "Escape":
           e.preventDefault();
-          if (isShortcutsModalOpen) {
+          if (isFeedbackModalOpen) {
+            setIsFeedbackModalOpen(false);
+          } else if (isShortcutsModalOpen) {
             setIsShortcutsModalOpen(false);
           } else if (isSidePanelOpen) {
             setIsSidePanelOpen(false);
@@ -471,7 +479,7 @@ export default function ReaderPage() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handlePlayPause, handleBack, handleForward, handleRestart, handleBookmark, handleToggleHighlight, isSidePanelOpen, isLibraryOpen, isShortcutsModalOpen, onboardingActive, reportOnboardingAction, mode, audio]);
+  }, [handlePlayPause, handleBack, handleForward, handleRestart, handleBookmark, handleToggleHighlight, isSidePanelOpen, isLibraryOpen, isShortcutsModalOpen, isFeedbackModalOpen, onboardingActive, reportOnboardingAction, mode, audio]);
 
   // Loading state
   if (!isLoaded) {
@@ -701,6 +709,36 @@ export default function ReaderPage() {
           </button>
 
           <ThemeToggle />
+
+          {/* Feedback button */}
+          <button
+            onClick={() => setIsFeedbackModalOpen(true)}
+            title="Send Feedback (F)"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "36px",
+              height: "36px",
+              fontSize: "14px",
+              color: "var(--text-secondary)",
+              backgroundColor: "var(--bg-secondary)",
+              border: "1px solid var(--border)",
+              borderRadius: "8px",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+          </button>
         </div>
       </header>
 
@@ -852,6 +890,7 @@ export default function ReaderPage() {
             <span><kbd style={kbdStyle}>S</kbd> Side Panel</span>
             <span><kbd style={kbdStyle}>B</kbd> Bookmark</span>
             <span><kbd style={kbdStyle}>H</kbd> Highlight</span>
+            <span><kbd style={kbdStyle}>F</kbd> Feedback</span>
             <span><kbd style={kbdStyle}>?</kbd> Help</span>
           </div>
         )}
@@ -879,6 +918,13 @@ export default function ReaderPage() {
       <KeyboardShortcutsModal
         isOpen={isShortcutsModalOpen}
         onClose={() => setIsShortcutsModalOpen(false)}
+      />
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        isOpen={isFeedbackModalOpen}
+        onClose={() => setIsFeedbackModalOpen(false)}
+        page="reader"
       />
 
       {/* Celebration Overlay */}
