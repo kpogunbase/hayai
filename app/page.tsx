@@ -6,6 +6,7 @@ import { UploadDropzone } from "@/components/UploadDropzone";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UserMenu } from "@/components/UserMenu";
 import { PaywallModal } from "@/components/PaywallModal";
+import { Footer } from "@/components/Footer";
 import { LibraryPanel } from "@/components/library/LibraryPanel";
 import { PasteTextModal } from "@/components/upload/PasteTextModal";
 import { OnboardingOverlay, DEMO_TEXT } from "@/components/onboarding/OnboardingOverlay";
@@ -287,6 +288,7 @@ function HomePageContent() {
   );
 
   return (
+    <>
     <main
       style={{
         minHeight: "100vh",
@@ -723,6 +725,9 @@ function HomePageContent() {
         }
       `}</style>
     </main>
+
+    <Footer />
+    </>
   );
 }
 

@@ -1,0 +1,12 @@
+# Hayai Robots.txt
+# https://readhayai.com
+
+User-agent: *
+Allow: /
+
+# Disallow private/API routes
+Disallow: /api/
+Disallow: /auth/
+
+# Sitemap location
+Sitemap: https://readhayai.com/sitemap.xml
