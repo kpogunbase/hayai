@@ -1,9 +1,10 @@
 import { parseDocx } from "./parseDocx";
 import { parsePdf } from "./parsePdf";
+import { parseEpub } from "./parseEpub";
 
 /**
  * Parse a file and extract plain text.
- * Supports TXT, DOCX, and PDF formats.
+ * Supports TXT, DOCX, PDF, and EPUB formats.
  *
  * @param file - The file to parse
  * @returns Promise resolving to the extracted text
@@ -21,6 +22,9 @@ export async function parseFile(file: File): Promise<string> {
     case "pdf":
       return await parsePdf(file);
 
+    case "epub":
+      return await parseEpub(file);
+
     default:
       throw new Error(`Unsupported file type: .${extension}`);
   }
@@ -28,3 +32,4 @@ export async function parseFile(file: File): Promise<string> {
 
 export { parseDocx } from "./parseDocx";
 export { parsePdf } from "./parsePdf";
+export { parseEpub, getEpubMetadata } from "./parseEpub";

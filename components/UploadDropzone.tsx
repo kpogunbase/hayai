@@ -8,8 +8,8 @@ interface UploadDropzoneProps {
   error?: string | null;
 }
 
-const ACCEPTED_EXTENSIONS = [".txt", ".docx", ".pdf"];
-const ACCEPT_STRING = ".txt,.docx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+const ACCEPTED_EXTENSIONS = [".txt", ".docx", ".pdf", ".epub"];
+const ACCEPT_STRING = ".txt,.docx,.pdf,.epub,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/epub+zip";
 
 function getFileIcon(filename: string) {
   const ext = filename.toLowerCase().split(".").pop();
@@ -28,6 +28,14 @@ function getFileIcon(filename: string) {
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
         <polyline points="14 2 14 8 20 8" />
         <path d="M16 13H8M16 17H8M10 9H8" />
+      </svg>
+    );
+  }
+  if (ext === "epub") {
+    return (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
       </svg>
     );
   }
@@ -174,7 +182,7 @@ export function UploadDropzone({ onFileSelected, isLoading, error }: UploadDropz
                 margin: 0,
               }}
             >
-              Supports TXT, DOCX, and PDF
+              Supports TXT, DOCX, PDF, and EPUB
             </p>
           </>
         )}

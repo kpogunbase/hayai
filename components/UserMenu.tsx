@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useAuth } from "./AuthProvider";
+import { StatsPanel } from "./stats/StatsPanel";
+import { useOnboardingStore } from "@/lib/stores/onboardingStore";
 
 interface UserMenuProps {
   onUpgradeClick?: () => void;
@@ -10,6 +12,9 @@ interface UserMenuProps {
 export function UserMenu({ onUpgradeClick }: UserMenuProps) {
   const { user, subscription, isLoading, signInWithGoogle, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const startOnboarding = useOnboardingStore((s) => s.startOnboarding);
+  const resetOnboarding = useOnboardingStore((s) => s.resetOnboarding);
 
   if (isLoading) {
     return (
@@ -248,6 +253,74 @@ export function UserMenu({ onUpgradeClick }: UserMenuProps) {
             <button
               onClick={() => {
                 setIsOpen(false);
+                setShowStats(true);
+              }}
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                fontSize: "14px",
+                color: "var(--text-secondary)",
+                backgroundColor: "transparent",
+                border: "none",
+                borderBottom: "1px solid var(--border)",
+                cursor: "pointer",
+                textAlign: "left",
+                transition: "background-color 0.15s",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 20V10M12 20V4M6 20v-6" />
+              </svg>
+              Reading Stats
+            </button>
+
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                resetOnboarding();
+                startOnboarding();
+              }}
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                fontSize: "14px",
+                color: "var(--text-secondary)",
+                backgroundColor: "transparent",
+                border: "none",
+                borderBottom: "1px solid var(--border)",
+                cursor: "pointer",
+                textAlign: "left",
+                transition: "background-color 0.15s",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+              Replay Tutorial
+            </button>
+
+            <button
+              onClick={() => {
+                setIsOpen(false);
                 signOut();
               }}
               style={{
@@ -273,6 +346,9 @@ export function UserMenu({ onUpgradeClick }: UserMenuProps) {
           </div>
         </>
       )}
+
+      {/* Stats Panel */}
+      <StatsPanel isOpen={showStats} onClose={() => setShowStats(false)} />
     </div>
   );
 }

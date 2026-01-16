@@ -24,6 +24,7 @@ interface UseAudioReturn {
   toggleMute: () => void;
   selectTrack: (trackId: number) => void;
   nextTrack: () => void;
+  prevTrack: () => void;
 }
 
 export function useAudio(): UseAudioReturn {
@@ -150,6 +151,11 @@ export function useAudio(): UseAudioReturn {
     selectTrack(nextId);
   }, [currentTrackId, selectTrack]);
 
+  const prevTrack = useCallback(() => {
+    const prevId = currentTrackId <= 1 ? TRACKS.length : currentTrackId - 1;
+    selectTrack(prevId);
+  }, [currentTrackId, selectTrack]);
+
   return {
     isPlaying,
     currentTrack,
@@ -163,5 +169,6 @@ export function useAudio(): UseAudioReturn {
     toggleMute,
     selectTrack,
     nextTrack,
+    prevTrack,
   };
 }

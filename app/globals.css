@@ -15,6 +15,10 @@
   --orp-highlight: #dc2626;
   --shadow: rgba(0, 0, 0, 0.08);
   --shadow-lg: rgba(0, 0, 0, 0.12);
+
+  /* Highlight colors */
+  --highlight-yellow: rgba(250, 204, 21, 0.4);
+  --highlight-active: rgba(59, 130, 246, 0.2);
 }
 
 [data-theme="dark"] {
@@ -31,6 +35,10 @@
   --orp-highlight: #f87171;
   --shadow: rgba(0, 0, 0, 0.3);
   --shadow-lg: rgba(0, 0, 0, 0.5);
+
+  /* Highlight colors */
+  --highlight-yellow: rgba(250, 204, 21, 0.3);
+  --highlight-active: rgba(96, 165, 250, 0.2);
 }
 
 /* Base reset */

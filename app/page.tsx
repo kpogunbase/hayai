@@ -6,9 +6,16 @@ import { UploadDropzone } from "@/components/UploadDropzone";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UserMenu } from "@/components/UserMenu";
 import { PaywallModal } from "@/components/PaywallModal";
+import { LibraryPanel } from "@/components/library/LibraryPanel";
+import { PasteTextModal } from "@/components/upload/PasteTextModal";
+import { OnboardingOverlay, DEMO_TEXT } from "@/components/onboarding/OnboardingOverlay";
 import { useAuth } from "@/components/AuthProvider";
 import { parseFile } from "@/lib/parse";
 import { tokenize } from "@/lib/tokenize";
+import { useLibraryStore } from "@/lib/stores/libraryStore";
+import { useReaderStore } from "@/lib/stores/readerStore";
+import { useOnboardingStore } from "@/lib/stores/onboardingStore";
+import { saveDocument } from "@/lib/storage/documentStorage";
 import {
   getLocalUsage,
   incrementLocalUsage,
@@ -16,6 +23,8 @@ import {
   incrementDbUsage,
   hasExceededDbLimit,
 } from "@/lib/usage";
+
+type InputMethod = "upload" | "paste";
 
 function HomePageContent() {
   const router = useRouter();
@@ -26,31 +35,117 @@ function HomePageContent() {
   const [error, setError] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [inputMethod, setInputMethod] = useState<InputMethod>("upload");
+  const [showPasteModal, setShowPasteModal] = useState(false);
+
+  // Library state
+  const isLibraryOpen = useLibraryStore((s) => s.isOpen);
+  const setLibraryOpen = useLibraryStore((s) => s.setOpen);
+  const loadDocuments = useLibraryStore((s) => s.loadDocuments);
+
+  // Reader store for loading documents
+  const setReaderDocument = useReaderStore((s) => s.setDocument);
+
+  // Onboarding state
+  const onboardingActive = useOnboardingStore((s) => s.isActive);
+  const initializeOnboarding = useOnboardingStore((s) => s.initialize);
+  const onboardingLoading = useOnboardingStore((s) => s.isLoading);
+
+  // Initialize onboarding on mount
+  useEffect(() => {
+    initializeOnboarding();
+  }, [initializeOnboarding]);
+
+  // Load library documents on mount
+  useEffect(() => {
+    loadDocuments(user?.id);
+  }, [loadDocuments, user?.id]);
 
   // Check for success/canceled from Stripe redirect
   useEffect(() => {
     if (searchParams.get("success") === "true") {
       setShowSuccess(true);
-      // Clear the URL params
       window.history.replaceState({}, "", "/");
     }
   }, [searchParams]);
 
+  // Keyboard shortcut for library (L)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if typing in an input
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+
+      if (e.key.toLowerCase() === "l") {
+        setLibraryOpen(!isLibraryOpen);
+      } else if (e.key === "Escape") {
+        if (showPasteModal) {
+          setShowPasteModal(false);
+        } else if (isLibraryOpen) {
+          setLibraryOpen(false);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isLibraryOpen, setLibraryOpen, showPasteModal]);
+
   const isSubscribed = subscription?.status === "active";
+
+  // Process and navigate to reader
+  const processAndNavigate = useCallback(
+    async (
+      text: string,
+      title: string,
+      fileType: string,
+      filename?: string
+    ) => {
+      const tokens = tokenize(text);
+
+      if (tokens.length === 0) {
+        setError("No readable text found in the content.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Save to library
+      try {
+        const doc = await saveDocument({
+          title,
+          fileType: fileType as "txt" | "docx" | "pdf" | "epub" | "paste",
+          originalFilename: filename,
+          rawText: text,
+        }, user?.id ?? null);
+
+        // Set up reader with document
+        setReaderDocument(doc.id, tokens, text);
+      } catch {
+        // If save fails (e.g., duplicate), still proceed to reader
+        sessionStorage.setItem("hayai_tokens", JSON.stringify(tokens));
+      }
+
+      // Navigate to reader
+      router.push("/reader");
+    },
+    [router, user?.id, setReaderDocument]
+  );
 
   const handleFileSelected = useCallback(
     async (file: File) => {
       // Check usage limits before processing
       if (!isSubscribed) {
         if (user) {
-          // Authenticated user - check DB
           const exceeded = await hasExceededDbLimit(user.id);
           if (exceeded) {
             setShowPaywall(true);
             return;
           }
         } else {
-          // Anonymous user - check localStorage
           if (hasExceededLocalLimit()) {
             setShowPaywall(true);
             return;
@@ -62,17 +157,7 @@ function HomePageContent() {
       setError(null);
 
       try {
-        // Parse file to extract text
         const text = await parseFile(file);
-
-        // Tokenize the text
-        const tokens = tokenize(text);
-
-        if (tokens.length === 0) {
-          setError("No readable text found in the file.");
-          setIsLoading(false);
-          return;
-        }
 
         // Increment usage (only if not subscribed)
         if (!isSubscribed) {
@@ -83,11 +168,10 @@ function HomePageContent() {
           }
         }
 
-        // Store tokens in sessionStorage for the reader page
-        sessionStorage.setItem("hayai_tokens", JSON.stringify(tokens));
+        // Get file type from extension
+        const ext = file.name.split(".").pop()?.toLowerCase() || "txt";
 
-        // Navigate to reader
-        router.push("/reader");
+        await processAndNavigate(text, file.name, ext, file.name);
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to process file.";
@@ -95,18 +179,86 @@ function HomePageContent() {
         setIsLoading(false);
       }
     },
-    [router, user, isSubscribed]
+    [user, isSubscribed, processAndNavigate]
+  );
+
+  const handlePasteSubmit = useCallback(
+    async (text: string, title: string) => {
+      // Check usage limits
+      if (!isSubscribed) {
+        if (user) {
+          const exceeded = await hasExceededDbLimit(user.id);
+          if (exceeded) {
+            setShowPasteModal(false);
+            setShowPaywall(true);
+            return;
+          }
+        } else {
+          if (hasExceededLocalLimit()) {
+            setShowPasteModal(false);
+            setShowPaywall(true);
+            return;
+          }
+        }
+      }
+
+      setIsLoading(true);
+      setShowPasteModal(false);
+
+      try {
+        // Increment usage
+        if (!isSubscribed) {
+          if (user) {
+            await incrementDbUsage(user.id);
+          } else {
+            incrementLocalUsage();
+          }
+        }
+
+        await processAndNavigate(text, title, "paste");
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to process text.";
+        setError(message);
+        setIsLoading(false);
+      }
+    },
+    [user, isSubscribed, processAndNavigate]
+  );
+
+  // Handle document selection from library
+  const handleDocumentSelect = useCallback(
+    (doc: { id: string; rawText: string; title: string }) => {
+      const tokens = tokenize(doc.rawText);
+      setReaderDocument(doc.id, tokens, doc.rawText);
+      setLibraryOpen(false);
+      router.push("/reader");
+    },
+    [router, setReaderDocument, setLibraryOpen]
   );
 
   // Calculate remaining uploads
   const getRemainingUploads = () => {
     if (isSubscribed) return "Unlimited";
     if (authLoading) return "...";
-
-    const used = user ? 0 : getLocalUsage(); // For anonymous, we show local. DB check happens on upload.
+    const used = user ? 0 : getLocalUsage();
     const remaining = Math.max(0, 3 - used);
     return remaining;
   };
+
+  // Handle demo text from onboarding
+  const handleLoadDemoText = useCallback(
+    async (text: string) => {
+      setIsLoading(true);
+      try {
+        await processAndNavigate(text, "Demo Text", "paste");
+      } catch {
+        setError("Failed to load demo text.");
+        setIsLoading(false);
+      }
+    },
+    [processAndNavigate]
+  );
 
   return (
     <main
@@ -126,7 +278,48 @@ function HomePageContent() {
           padding: "16px 24px",
         }}
       >
-        <ThemeToggle />
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <ThemeToggle />
+          {/* Library button */}
+          <button
+            onClick={() => setLibraryOpen(true)}
+            title="Library (L)"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "8px 12px",
+              fontSize: "14px",
+              color: "var(--text-secondary)",
+              backgroundColor: "var(--bg-secondary)",
+              border: "1px solid var(--border)",
+              borderRadius: "8px",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
+              e.currentTarget.style.color = "var(--text-primary)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
+              e.currentTarget.style.color = "var(--text-secondary)";
+            }}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+            </svg>
+            Library
+          </button>
+        </div>
         <UserMenu onUpgradeClick={() => setShowPaywall(true)} />
       </header>
 
@@ -205,12 +398,187 @@ function HomePageContent() {
             </p>
           </div>
 
-          {/* Upload dropzone */}
-          <UploadDropzone
-            onFileSelected={handleFileSelected}
-            isLoading={isLoading}
-            error={error}
-          />
+          {/* Input method selector */}
+          <div
+            style={{
+              display: "flex",
+              marginBottom: "16px",
+              backgroundColor: "var(--bg-secondary)",
+              borderRadius: "10px",
+              padding: "4px",
+            }}
+          >
+            <button
+              onClick={() => setInputMethod("upload")}
+              style={{
+                flex: 1,
+                padding: "10px 16px",
+                fontSize: "14px",
+                fontWeight: 500,
+                color:
+                  inputMethod === "upload"
+                    ? "var(--text-primary)"
+                    : "var(--text-secondary)",
+                backgroundColor:
+                  inputMethod === "upload"
+                    ? "var(--bg-primary)"
+                    : "transparent",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+                boxShadow:
+                  inputMethod === "upload"
+                    ? "0 1px 3px var(--shadow)"
+                    : "none",
+              }}
+            >
+              Upload File
+            </button>
+            <button
+              onClick={() => setInputMethod("paste")}
+              style={{
+                flex: 1,
+                padding: "10px 16px",
+                fontSize: "14px",
+                fontWeight: 500,
+                color:
+                  inputMethod === "paste"
+                    ? "var(--text-primary)"
+                    : "var(--text-secondary)",
+                backgroundColor:
+                  inputMethod === "paste"
+                    ? "var(--bg-primary)"
+                    : "transparent",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+                boxShadow:
+                  inputMethod === "paste" ? "0 1px 3px var(--shadow)" : "none",
+              }}
+            >
+              Paste Text
+            </button>
+          </div>
+
+          {/* Upload dropzone or Paste button */}
+          {inputMethod === "upload" ? (
+            <div data-onboarding="upload">
+              <UploadDropzone
+                onFileSelected={handleFileSelected}
+                isLoading={isLoading}
+                error={error}
+              />
+            </div>
+          ) : (
+            <div
+              onClick={() => !isLoading && setShowPasteModal(true)}
+              style={{
+                border: "2px dashed var(--border-strong)",
+                borderRadius: "16px",
+                padding: "56px 32px",
+                textAlign: "center",
+                cursor: isLoading ? "wait" : "pointer",
+                backgroundColor: "var(--bg-secondary)",
+                transition: "all 0.2s ease",
+                opacity: isLoading ? 0.7 : 1,
+              }}
+              onMouseEnter={(e) => {
+                if (!isLoading) {
+                  e.currentTarget.style.borderColor = "var(--accent)";
+                  e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--border-strong)";
+                e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
+              }}
+            >
+              {isLoading ? (
+                <div style={{ color: "var(--text-secondary)" }}>
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      margin: "0 auto 16px",
+                      border: "3px solid var(--border)",
+                      borderTopColor: "var(--accent)",
+                      borderRadius: "50%",
+                      animation: "spin 1s linear infinite",
+                    }}
+                  />
+                  <p style={{ fontSize: "16px", margin: 0 }}>
+                    Processing text...
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div
+                    style={{
+                      width: "48px",
+                      height: "48px",
+                      margin: "0 auto 20px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "var(--bg-tertiary)",
+                      borderRadius: "12px",
+                      color: "var(--accent)",
+                    }}
+                  >
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                      <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                    </svg>
+                  </div>
+                  <p
+                    style={{
+                      fontSize: "17px",
+                      fontWeight: 500,
+                      marginBottom: "8px",
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    Click to paste text
+                  </p>
+                  <p
+                    style={{
+                      fontSize: "14px",
+                      color: "var(--text-tertiary)",
+                      margin: 0,
+                    }}
+                  >
+                    Paste any text content to start reading
+                  </p>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Error display for paste mode */}
+          {inputMethod === "paste" && error && (
+            <div
+              style={{
+                marginTop: "16px",
+                padding: "12px 16px",
+                backgroundColor: "rgba(220, 38, 38, 0.1)",
+                border: "1px solid rgba(220, 38, 38, 0.2)",
+                borderRadius: "8px",
+                color: "var(--orp-highlight)",
+                fontSize: "14px",
+              }}
+            >
+              {error}
+            </div>
+          )}
 
           {/* Usage info */}
           <div
@@ -276,18 +644,72 @@ function HomePageContent() {
           >
             Your files are processed locally and never uploaded to any server.
           </p>
+
+          {/* Keyboard hint */}
+          <p
+            style={{
+              fontSize: "12px",
+              color: "var(--text-tertiary)",
+              marginTop: "8px",
+              textAlign: "center",
+            }}
+          >
+            Press <kbd style={kbdStyle}>L</kbd> to open Library
+          </p>
         </div>
       </div>
 
+      {/* Library Panel */}
+      <LibraryPanel
+        isOpen={isLibraryOpen}
+        onClose={() => setLibraryOpen(false)}
+        onDocumentSelect={handleDocumentSelect}
+      />
+
+      {/* Paste Text Modal */}
+      <PasteTextModal
+        isOpen={showPasteModal}
+        onClose={() => setShowPasteModal(false)}
+        onSubmit={handlePasteSubmit}
+        isLoading={isLoading}
+      />
+
       {/* Paywall Modal */}
       <PaywallModal isOpen={showPaywall} onClose={() => setShowPaywall(false)} />
+
+      {/* Onboarding Overlay */}
+      {!onboardingLoading && (
+        <OnboardingOverlay onLoadDemoText={handleLoadDemoText} />
+      )}
+
+      <style jsx>{`
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
     </main>
   );
 }
 
+const kbdStyle: React.CSSProperties = {
+  display: "inline-block",
+  padding: "2px 6px",
+  fontSize: "11px",
+  fontFamily: "inherit",
+  backgroundColor: "var(--bg-tertiary)",
+  borderRadius: "4px",
+  border: "1px solid var(--border)",
+};
+
 export default function HomePage() {
   return (
-    <Suspense fallback={<div style={{ minHeight: "100vh", backgroundColor: "var(--bg-primary)" }} />}>
+    <Suspense
+      fallback={
+        <div style={{ minHeight: "100vh", backgroundColor: "var(--bg-primary)" }} />
+      }
+    >
       <HomePageContent />
     </Suspense>
   );
