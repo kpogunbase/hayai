@@ -1,3 +1,5 @@
+const { withSentryConfig } = require("@sentry/nextjs");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async headers() {
@@ -36,4 +38,26 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+module.exports = withSentryConfig(nextConfig, {
+  // Sentry webpack plugin options
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+
+  // Suppress source map upload logs
+  silent: true,
+
+  // Upload source maps for better stack traces
+  widenClientFileUpload: true,
+
+  // Transpile Sentry SDK for better compatibility
+  transpileClientSDK: true,
+
+  // Hide source maps from end users
+  hideSourceMaps: true,
+
+  // Disable logger to reduce bundle size
+  disableLogger: true,
+
+  // Automatically tree-shake Sentry SDK
+  automaticVercelMonitors: true,
+});
