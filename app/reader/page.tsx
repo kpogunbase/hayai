@@ -19,6 +19,7 @@ import { useReaderStore } from "@/lib/stores/readerStore";
 import { useLibraryStore } from "@/lib/stores/libraryStore";
 import { useStatsStore } from "@/lib/stores/statsStore";
 import { useOnboardingStore } from "@/lib/stores/onboardingStore";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 import { tokenize } from "@/lib/tokenize";
 import {
   getChallengeWpm,
@@ -38,6 +39,7 @@ export default function ReaderPage() {
   const statsStore = useStatsStore();
   const onboardingActive = useOnboardingStore((s) => s.isActive);
   const reportOnboardingAction = useOnboardingStore((s) => s.reportAction);
+  const isMobile = useIsMobile();
 
   // Local reader state (we'll sync with store as needed)
   const [tokens, setTokens] = useState<string[]>([]);
@@ -775,15 +777,29 @@ export default function ReaderPage() {
         </div>
 
         {/* Controls */}
-        <ReaderControls
-          isPlaying={isPlaying}
-          onPlayPause={handlePlayPause}
-          onRestart={handleRestart}
-          onBack={handleBack}
-          onForward={handleForward}
-          currentIndex={index}
-          totalTokens={tokens.length}
-        />
+        <div data-onboarding="reader-controls">
+          <ReaderControls
+            isPlaying={isPlaying}
+            onPlayPause={() => {
+              handlePlayPause();
+              // Report to onboarding when button is clicked (for mobile)
+              if (onboardingActive) reportOnboardingAction("space");
+            }}
+            onRestart={handleRestart}
+            onBack={() => {
+              handleBack();
+              // Report to onboarding when button is clicked (for mobile)
+              if (onboardingActive) reportOnboardingAction("arrow");
+            }}
+            onForward={() => {
+              handleForward();
+              // Report to onboarding when button is clicked (for mobile)
+              if (onboardingActive) reportOnboardingAction("arrow");
+            }}
+            currentIndex={index}
+            totalTokens={tokens.length}
+          />
+        </div>
 
         {/* Mode selector */}
         <div style={{ width: "100%", maxWidth: "280px" }}>
@@ -818,25 +834,27 @@ export default function ReaderPage() {
           />
         </div>
 
-        {/* Keyboard shortcuts hint */}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "12px",
-            fontSize: "12px",
-            color: "var(--text-tertiary)",
-            justifyContent: "center",
-          }}
-        >
-          <span><kbd style={kbdStyle}>Space</kbd> Play/Pause</span>
-          <span><kbd style={kbdStyle}>←</kbd><kbd style={kbdStyle}>→</kbd> Skip</span>
-          <span><kbd style={kbdStyle}>R</kbd> Restart</span>
-          <span><kbd style={kbdStyle}>S</kbd> Side Panel</span>
-          <span><kbd style={kbdStyle}>B</kbd> Bookmark</span>
-          <span><kbd style={kbdStyle}>H</kbd> Highlight</span>
-          <span><kbd style={kbdStyle}>?</kbd> Help</span>
-        </div>
+        {/* Keyboard shortcuts hint - hide on mobile */}
+        {!isMobile && (
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "12px",
+              fontSize: "12px",
+              color: "var(--text-tertiary)",
+              justifyContent: "center",
+            }}
+          >
+            <span><kbd style={kbdStyle}>Space</kbd> Play/Pause</span>
+            <span><kbd style={kbdStyle}>←</kbd><kbd style={kbdStyle}>→</kbd> Skip</span>
+            <span><kbd style={kbdStyle}>R</kbd> Restart</span>
+            <span><kbd style={kbdStyle}>S</kbd> Side Panel</span>
+            <span><kbd style={kbdStyle}>B</kbd> Bookmark</span>
+            <span><kbd style={kbdStyle}>H</kbd> Highlight</span>
+            <span><kbd style={kbdStyle}>?</kbd> Help</span>
+          </div>
+        )}
       </div>
 
       {/* Side Panel */}

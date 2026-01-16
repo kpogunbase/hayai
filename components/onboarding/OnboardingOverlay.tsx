@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useOnboardingStore, OnboardingStep } from "@/lib/stores/onboardingStore";
 import { OnboardingSpotlight } from "./OnboardingSpotlight";
 import { OnboardingTooltip } from "./OnboardingTooltip";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 
 // Demo text for onboarding
 const DEMO_TEXT = `Speed reading is a powerful skill that can transform how you consume information. By training your eyes and brain to process words more efficiently, you can dramatically increase your reading speed while maintaining comprehension.
@@ -23,6 +24,10 @@ interface StepConfig {
   actionLabel?: string;
   targetSelector?: string;
   tooltipPosition?: "top" | "bottom" | "left" | "right";
+  // Mobile-specific properties
+  mobileDescription?: string;
+  mobileActionLabel?: string;
+  mobileTargetSelector?: string;
 }
 
 const STEP_CONFIGS: Record<OnboardingStep, StepConfig> = {
@@ -44,6 +49,10 @@ const STEP_CONFIGS: Record<OnboardingStep, StepConfig> = {
     keyboardHint: "Space",
     targetSelector: "[data-onboarding='rsvp-display']",
     tooltipPosition: "bottom",
+    // Mobile: tap the play button
+    mobileDescription: "Tap the play button to start and pause your reading session.",
+    mobileActionLabel: "Tap play button below",
+    mobileTargetSelector: "[data-onboarding='reader-controls']",
   },
   navigate: {
     title: "Navigate through text",
@@ -51,6 +60,10 @@ const STEP_CONFIGS: Record<OnboardingStep, StepConfig> = {
     keyboardHint: "← →",
     targetSelector: "[data-onboarding='rsvp-display']",
     tooltipPosition: "bottom",
+    // Mobile: use the arrow buttons
+    mobileDescription: "Use the arrow buttons to skip forward or back through the text.",
+    mobileActionLabel: "Try the arrow buttons",
+    mobileTargetSelector: "[data-onboarding='reader-controls']",
   },
   speed: {
     title: "Adjust your speed",
@@ -60,11 +73,14 @@ const STEP_CONFIGS: Record<OnboardingStep, StepConfig> = {
     tooltipPosition: "top",
   },
   shortcuts: {
-    title: "Discover shortcuts",
+    title: "Discover more",
     description: "Press ? anytime to see all available keyboard shortcuts.",
     keyboardHint: "?",
     targetSelector: "[data-onboarding='rsvp-display']",
     tooltipPosition: "bottom",
+    // Mobile: show action button to view controls
+    mobileDescription: "There are more controls and features to discover as you read.",
+    mobileActionLabel: "View all controls",
   },
   complete: {
     title: "You're all set!",
@@ -91,6 +107,7 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
 
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const isMobile = useIsMobile();
 
   // Fade in on mount
   useEffect(() => {
@@ -107,9 +124,14 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
     if (!isActive) return;
 
     const config = STEP_CONFIGS[currentStep];
-    if (config.targetSelector) {
+    // Use mobile-specific selector if on mobile and one exists
+    const selector = isMobile && config.mobileTargetSelector
+      ? config.mobileTargetSelector
+      : config.targetSelector;
+
+    if (selector) {
       const updateRect = () => {
-        const element = document.querySelector(config.targetSelector!);
+        const element = document.querySelector(selector);
         if (element) {
           setTargetRect(element.getBoundingClientRect());
         } else {
@@ -131,7 +153,7 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
     } else {
       setTargetRect(null);
     }
-  }, [isActive, currentStep]);
+  }, [isActive, currentStep, isMobile]);
 
   // Handle keyboard shortcuts during onboarding
   useEffect(() => {
@@ -184,13 +206,19 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
       case "speed":
         nextStep();
         break;
+      case "shortcuts":
+        // On mobile, the action button advances the step directly
+        if (isMobile) {
+          reportAction("help");
+        }
+        break;
       case "complete":
         completeOnboarding();
         break;
       default:
         nextStep();
     }
-  }, [currentStep, nextStep, completeOnboarding, onLoadDemoText, reportAction]);
+  }, [currentStep, nextStep, completeOnboarding, onLoadDemoText, reportAction, isMobile]);
 
   if (!isActive) return null;
 
@@ -416,20 +444,22 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
             </button>
           )}
 
-          {/* Keyboard hint */}
-          <p
-            style={{
-              position: "absolute",
-              bottom: "32px",
-              fontSize: "13px",
-              color: "var(--text-tertiary)",
-            }}
-          >
-            Press <kbd style={kbdStyle}>{currentStep === "welcome" ? "Space" : "Enter"}</kbd> to continue
-            {currentStep === "welcome" && (
-              <> or <kbd style={kbdStyle}>Esc</kbd> to skip</>
-            )}
-          </p>
+          {/* Keyboard hint - hide on mobile */}
+          {!isMobile && (
+            <p
+              style={{
+                position: "absolute",
+                bottom: "32px",
+                fontSize: "13px",
+                color: "var(--text-tertiary)",
+              }}
+            >
+              Press <kbd style={kbdStyle}>{currentStep === "welcome" ? "Space" : "Enter"}</kbd> to continue
+              {currentStep === "welcome" && (
+                <> or <kbd style={kbdStyle}>Esc</kbd> to skip</>
+              )}
+            </p>
+          )}
         </div>
       )}
 
@@ -437,14 +467,15 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
       {!isFullScreen && (
         <OnboardingTooltip
           title={config.title}
-          description={config.description}
-          keyboardHint={config.keyboardHint}
+          description={isMobile && config.mobileDescription ? config.mobileDescription : config.description}
+          keyboardHint={isMobile ? undefined : config.keyboardHint}
           position={config.tooltipPosition}
           targetRect={targetRect}
           showSuccess={showStepCelebration}
           successMessage={celebrationMessage}
-          onAction={config.actionLabel ? handleAction : undefined}
-          actionLabel={config.actionLabel}
+          onAction={(config.actionLabel || (isMobile && config.mobileActionLabel)) ? handleAction : undefined}
+          actionLabel={isMobile && config.mobileActionLabel ? config.mobileActionLabel : config.actionLabel}
+          isMobile={isMobile}
         />
       )}
 

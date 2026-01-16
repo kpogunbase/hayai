@@ -12,6 +12,7 @@ interface OnboardingTooltipProps {
   successMessage?: string;
   onAction?: () => void;
   actionLabel?: string;
+  isMobile?: boolean;
 }
 
 export function OnboardingTooltip({
@@ -24,6 +25,7 @@ export function OnboardingTooltip({
   successMessage,
   onAction,
   actionLabel,
+  isMobile = false,
 }: OnboardingTooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
 
