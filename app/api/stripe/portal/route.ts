@@ -1,9 +1,21 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
+import { checkRateLimit, getClientIp, rateLimitHeaders } from "@/lib/rateLimit";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = getClientIp(request.headers);
+    const rateLimit = await checkRateLimit(ip, "portal");
+
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429, headers: rateLimitHeaders(rateLimit) }
+      );
+    }
+
     if (!process.env.NEXT_PUBLIC_SITE_URL) {
       console.error("NEXT_PUBLIC_SITE_URL is not configured");
       return NextResponse.json(

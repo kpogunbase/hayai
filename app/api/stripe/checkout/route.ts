@@ -1,9 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe, PRICES } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
+import { checkRateLimit, getClientIp, rateLimitHeaders } from "@/lib/rateLimit";
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = getClientIp(request.headers);
+    const rateLimit = await checkRateLimit(ip, "checkout");
+
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429, headers: rateLimitHeaders(rateLimit) }
+      );
+    }
+
     // Validate environment
     if (!process.env.STRIPE_SECRET_KEY) {
       console.error("STRIPE_SECRET_KEY is not configured");
