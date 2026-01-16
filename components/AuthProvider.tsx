@@ -96,14 +96,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase, fetchSubscription]);
 
   const signInWithGoogle = useCallback(async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    if (error) {
-      console.error("Error signing in:", error.message);
+    console.log("[Auth] Starting Google sign-in...");
+    console.log("[Auth] Redirect URL:", `${window.location.origin}/auth/callback`);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      console.log("[Auth] OAuth response:", { data, error });
+
+      if (error) {
+        console.error("[Auth] Error signing in:", error.message);
+        alert(`Sign in failed: ${error.message}`);
+        return;
+      }
+
+      // If we got a URL but no automatic redirect (shouldn't happen normally)
+      if (data?.url) {
+        console.log("[Auth] Redirecting to:", data.url);
+        window.location.href = data.url;
+      } else {
+        console.log("[Auth] No URL in response, redirect should happen automatically");
+      }
+    } catch (err) {
+      console.error("[Auth] Unexpected error during sign in:", err);
+      alert("An unexpected error occurred during sign in. Please try again.");
     }
   }, [supabase]);
 
