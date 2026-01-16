@@ -2,7 +2,7 @@
 
 import { useAuth } from "./AuthProvider";
 import { PricingCards } from "./PricingCards";
-import { FREE_UPLOAD_LIMIT } from "@/lib/usage";
+import { LIMITS } from "@/lib/usage";
 
 interface PaywallModalProps {
   isOpen: boolean;
@@ -113,7 +113,7 @@ export function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
                 margin: "0 0 8px",
               }}
             >
-              Upgrade to Hayai Pro
+              {user ? "Upgrade to Hayai Pro" : "Get More Uploads"}
             </h2>
             <p
               style={{
@@ -123,9 +123,19 @@ export function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
                 lineHeight: 1.5,
               }}
             >
-              You&apos;ve used your {FREE_UPLOAD_LIMIT} free uploads.
-              <br />
-              Upgrade for unlimited speed reading.
+              {user ? (
+                <>
+                  You&apos;ve used your {LIMITS.free} free uploads.
+                  <br />
+                  Upgrade for more speed reading.
+                </>
+              ) : (
+                <>
+                  You&apos;ve used your {LIMITS.anonymous} free uploads.
+                  <br />
+                  Sign in for {LIMITS.free} uploads, or go Pro for more.
+                </>
+              )}
             </p>
           </div>
 
@@ -133,39 +143,43 @@ export function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
 
           {!user && (
             <div style={{ textAlign: "center", marginTop: "24px" }}>
-              <p
+              <div
                 style={{
-                  fontSize: "13px",
-                  color: "var(--text-tertiary)",
-                  margin: "0 0 12px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "12px",
+                  marginBottom: "12px",
                 }}
               >
-                Already have an account?
-              </p>
+                <div style={{ flex: 1, height: "1px", backgroundColor: "var(--border)" }} />
+                <span style={{ fontSize: "13px", color: "var(--text-tertiary)" }}>or</span>
+                <div style={{ flex: 1, height: "1px", backgroundColor: "var(--border)" }} />
+              </div>
               <button
                 onClick={signInWithGoogle}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "8px",
-                  padding: "10px 20px",
+                  padding: "12px 24px",
                   fontSize: "14px",
                   fontWeight: 500,
                   color: "var(--text-primary)",
-                  backgroundColor: "transparent",
+                  backgroundColor: "var(--bg-secondary)",
                   border: "1px solid var(--border)",
                   borderRadius: "8px",
                   cursor: "pointer",
                   transition: "all 0.15s ease",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
+                  e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent";
+                  e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
                 }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24">
+                <svg width="18" height="18" viewBox="0 0 24 24">
                   <path
                     fill="currentColor"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -183,8 +197,17 @@ export function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                Sign in with Google
+                Sign in for {LIMITS.free} free uploads
               </button>
+              <p
+                style={{
+                  fontSize: "12px",
+                  color: "var(--text-tertiary)",
+                  marginTop: "8px",
+                }}
+              >
+                No credit card required
+              </p>
             </div>
           )}
         </div>

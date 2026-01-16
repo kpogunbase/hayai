@@ -22,6 +22,8 @@ import {
   hasExceededLocalLimit,
   incrementDbUsage,
   hasExceededDbLimit,
+  getDbRemaining,
+  LIMITS,
 } from "@/lib/usage";
 
 type InputMethod = "upload" | "paste";
@@ -95,8 +97,6 @@ function HomePageContent() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isLibraryOpen, setLibraryOpen, showPasteModal]);
 
-  const isSubscribed = subscription?.status === "active";
-
   // Process and navigate to reader
   const processAndNavigate = useCallback(
     async (
@@ -138,18 +138,20 @@ function HomePageContent() {
   const handleFileSelected = useCallback(
     async (file: File) => {
       // Check usage limits before processing
-      if (!isSubscribed) {
-        if (user) {
-          const exceeded = await hasExceededDbLimit(user.id);
-          if (exceeded) {
-            setShowPaywall(true);
-            return;
-          }
-        } else {
-          if (hasExceededLocalLimit()) {
-            setShowPaywall(true);
-            return;
-          }
+      if (user) {
+        const exceeded = await hasExceededDbLimit(
+          user.id,
+          subscription?.plan ?? null,
+          subscription?.currentPeriodEnd ?? null
+        );
+        if (exceeded) {
+          setShowPaywall(true);
+          return;
+        }
+      } else {
+        if (hasExceededLocalLimit()) {
+          setShowPaywall(true);
+          return;
         }
       }
 
@@ -159,13 +161,11 @@ function HomePageContent() {
       try {
         const text = await parseFile(file);
 
-        // Increment usage (only if not subscribed)
-        if (!isSubscribed) {
-          if (user) {
-            await incrementDbUsage(user.id);
-          } else {
-            incrementLocalUsage();
-          }
+        // Increment usage
+        if (user) {
+          await incrementDbUsage(user.id);
+        } else {
+          incrementLocalUsage();
         }
 
         // Get file type from extension
@@ -179,26 +179,28 @@ function HomePageContent() {
         setIsLoading(false);
       }
     },
-    [user, isSubscribed, processAndNavigate]
+    [user, subscription, processAndNavigate]
   );
 
   const handlePasteSubmit = useCallback(
     async (text: string, title: string) => {
       // Check usage limits
-      if (!isSubscribed) {
-        if (user) {
-          const exceeded = await hasExceededDbLimit(user.id);
-          if (exceeded) {
-            setShowPasteModal(false);
-            setShowPaywall(true);
-            return;
-          }
-        } else {
-          if (hasExceededLocalLimit()) {
-            setShowPasteModal(false);
-            setShowPaywall(true);
-            return;
-          }
+      if (user) {
+        const exceeded = await hasExceededDbLimit(
+          user.id,
+          subscription?.plan ?? null,
+          subscription?.currentPeriodEnd ?? null
+        );
+        if (exceeded) {
+          setShowPasteModal(false);
+          setShowPaywall(true);
+          return;
+        }
+      } else {
+        if (hasExceededLocalLimit()) {
+          setShowPasteModal(false);
+          setShowPaywall(true);
+          return;
         }
       }
 
@@ -207,12 +209,10 @@ function HomePageContent() {
 
       try {
         // Increment usage
-        if (!isSubscribed) {
-          if (user) {
-            await incrementDbUsage(user.id);
-          } else {
-            incrementLocalUsage();
-          }
+        if (user) {
+          await incrementDbUsage(user.id);
+        } else {
+          incrementLocalUsage();
         }
 
         await processAndNavigate(text, title, "paste");
@@ -223,7 +223,7 @@ function HomePageContent() {
         setIsLoading(false);
       }
     },
-    [user, isSubscribed, processAndNavigate]
+    [user, subscription, processAndNavigate]
   );
 
   // Handle document selection from library
@@ -237,14 +237,40 @@ function HomePageContent() {
     [router, setReaderDocument, setLibraryOpen]
   );
 
-  // Calculate remaining uploads
-  const getRemainingUploads = () => {
-    if (isSubscribed) return "Unlimited";
-    if (authLoading) return "...";
-    const used = user ? 0 : getLocalUsage();
-    const remaining = Math.max(0, 3 - used);
-    return remaining;
-  };
+  // Track remaining uploads for display
+  const [remainingUploads, setRemainingUploads] = useState<number | string>("...");
+
+  useEffect(() => {
+    const fetchRemaining = async () => {
+      if (authLoading) {
+        setRemainingUploads("...");
+        return;
+      }
+
+      if (subscription?.plan === "yearly") {
+        setRemainingUploads("Unlimited");
+        return;
+      }
+
+      if (user) {
+        const remaining = await getDbRemaining(
+          user.id,
+          subscription?.plan ?? null,
+          subscription?.currentPeriodEnd ?? null
+        );
+        if (remaining === Infinity) {
+          setRemainingUploads("Unlimited");
+        } else {
+          setRemainingUploads(remaining);
+        }
+      } else {
+        const used = getLocalUsage();
+        setRemainingUploads(Math.max(0, LIMITS.anonymous - used));
+      }
+    };
+
+    fetchRemaining();
+  }, [user, subscription, authLoading]);
 
   // Handle demo text from onboarding
   const handleLoadDemoText = useCallback(
@@ -594,18 +620,25 @@ function HomePageContent() {
             }}
           >
             <span style={{ color: "var(--text-secondary)" }}>
-              {isSubscribed ? (
+              {remainingUploads === "Unlimited" ? (
                 <>
                   <span style={{ color: "var(--accent)", fontWeight: 600 }}>
                     Pro
                   </span>{" "}
                   — Unlimited uploads
                 </>
+              ) : subscription?.plan === "monthly" ? (
+                <>
+                  <span style={{ color: "var(--accent)", fontWeight: 600 }}>
+                    Pro
+                  </span>{" "}
+                  — {remainingUploads} uploads remaining this month
+                </>
               ) : (
-                <>Uploads remaining: {getRemainingUploads()}</>
+                <>Uploads remaining: {remainingUploads}</>
               )}
             </span>
-            {!isSubscribed && (
+            {subscription?.status !== "active" && (
               <button
                 onClick={() => setShowPaywall(true)}
                 style={{
