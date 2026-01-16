@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "./AuthProvider";
 import { LIMITS } from "@/lib/usage";
+import { isValidRedirectUrl } from "@/lib/security";
 
 interface PricingCardsProps {
   onClose?: () => void;
@@ -37,6 +38,10 @@ export function PricingCards({ onClose }: PricingCardsProps) {
       }
 
       if (data.url) {
+        // Validate URL before redirecting (security: prevent open redirect)
+        if (!isValidRedirectUrl(data.url)) {
+          throw new Error("Invalid checkout URL");
+        }
         window.location.href = data.url;
       } else {
         throw new Error("No checkout URL returned");

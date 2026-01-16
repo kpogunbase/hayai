@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "./AuthProvider";
 import { getProfile, upsertProfile, uploadAvatar, Profile } from "@/lib/profile";
+import { isValidRedirectUrl } from "@/lib/security";
 
 interface ProfileSettingsModalProps {
   isOpen: boolean;
@@ -98,7 +99,7 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
     try {
       const res = await fetch("/api/stripe/portal", { method: "POST" });
       const { url, error } = await res.json();
-      if (url) {
+      if (url && isValidRedirectUrl(url)) {
         window.location.href = url;
       } else {
         setError(error || "Failed to open billing portal");

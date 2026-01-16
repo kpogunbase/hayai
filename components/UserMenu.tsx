@@ -6,6 +6,7 @@ import { StatsPanel } from "./stats/StatsPanel";
 import { ProfileSettingsModal } from "./ProfileSettingsModal";
 import { useOnboardingStore } from "@/lib/stores/onboardingStore";
 import { getProfile, Profile } from "@/lib/profile";
+import { isValidRedirectUrl } from "@/lib/security";
 
 interface UserMenuProps {
   onUpgradeClick?: () => void;
@@ -325,7 +326,9 @@ export function UserMenu({ onUpgradeClick }: UserMenuProps) {
                     method: "POST",
                   });
                   const { url } = await res.json();
-                  if (url) window.location.href = url;
+                  if (url && isValidRedirectUrl(url)) {
+                    window.location.href = url;
+                  }
                 }}
                 style={{
                   width: "100%",
