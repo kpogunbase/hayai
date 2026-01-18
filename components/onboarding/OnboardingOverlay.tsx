@@ -273,7 +273,7 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
               width: isMobile ? "64px" : "80px",
               height: isMobile ? "64px" : "80px",
               borderRadius: isMobile ? "16px" : "20px",
-              backgroundColor: "var(--accent)",
+              background: "var(--accent-gradient)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -312,17 +312,46 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
           </div>
 
           {/* Title */}
-          <h1
-            style={{
-              fontSize: isMobile ? "24px" : "32px",
-              fontWeight: 700,
-              color: "var(--text-primary)",
-              margin: "0 0 12px",
-              textAlign: "center",
-            }}
-          >
-            {config.title}
-          </h1>
+          {currentStep === "welcome" ? (
+            <div style={{ textAlign: "center", marginBottom: "12px" }}>
+              <p
+                style={{
+                  fontSize: isMobile ? "14px" : "16px",
+                  fontWeight: 400,
+                  color: "var(--text-secondary)",
+                  margin: "0 0 8px",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Welcome to
+              </p>
+              <h1
+                style={{
+                  fontSize: isMobile ? "32px" : "42px",
+                  fontWeight: 500,
+                  color: "var(--text-primary)",
+                  margin: 0,
+                  letterSpacing: "0.25em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Hayai
+              </h1>
+            </div>
+          ) : (
+            <h1
+              style={{
+                fontSize: isMobile ? "24px" : "32px",
+                fontWeight: 700,
+                color: "var(--text-primary)",
+                margin: "0 0 12px",
+                textAlign: "center",
+              }}
+            >
+              {config.title}
+            </h1>
+          )}
 
           {/* Description */}
           <p
@@ -401,20 +430,22 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
               fontSize: isMobile ? "15px" : "16px",
               fontWeight: 600,
               color: "#fff",
-              backgroundColor: "var(--accent)",
+              background: "var(--accent-gradient)",
               border: "none",
               borderRadius: "12px",
               cursor: "pointer",
-              transition: "transform 0.15s, box-shadow 0.15s",
+              transition: "transform 0.15s, box-shadow 0.15s, opacity 0.15s",
               boxShadow: "0 4px 20px rgba(0, 0, 0, 0.2)",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "scale(1.02)";
               e.currentTarget.style.boxShadow = "0 6px 24px rgba(0, 0, 0, 0.3)";
+              e.currentTarget.style.opacity = "0.9";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = "scale(1)";
               e.currentTarget.style.boxShadow = "0 4px 20px rgba(0, 0, 0, 0.2)";
+              e.currentTarget.style.opacity = "1";
             }}
           >
             {config.actionLabel}

@@ -263,7 +263,7 @@ export function OnboardingTooltip({
                 fontSize: "14px",
                 fontWeight: 600,
                 color: "#fff",
-                backgroundColor: "var(--accent)",
+                background: "var(--accent-gradient)",
                 border: "none",
                 borderRadius: "10px",
                 cursor: "pointer",
