@@ -23,11 +23,17 @@ export interface ReadingStats {
   totalDocumentsRead: number;
   totalWordsRead: number;
   totalReadingTimeSeconds: number;
+  totalPassagesCompleted: number;
   updatedAt: string;
 }
 
-export interface LocalReadingStats extends Omit<ReadingStats, 'userId' | 'id'> {
+export interface LocalReadingStats {
   // For anonymous users
+  totalDocumentsRead: number;
+  totalWordsRead: number;
+  totalReadingTimeSeconds: number;
+  totalPassagesCompleted: number;
+  updatedAt: string;
 }
 
 export interface DailyReadingStats {
@@ -49,6 +55,7 @@ export interface ComputedStats {
   totalDocumentsRead: number;
   totalWordsRead: number;
   totalReadingTimeSeconds: number;
+  totalPassagesCompleted: number;
 
   // Time-based word counts
   wordsToday: number;

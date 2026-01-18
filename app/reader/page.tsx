@@ -12,6 +12,7 @@ import { SidePanel } from "@/components/sidepanel/SidePanel";
 import { LibraryPanel } from "@/components/library/LibraryPanel";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import { FeedbackModal } from "@/components/FeedbackModal";
+import { AnalyticsModal } from "@/components/AnalyticsModal";
 import { CelebrationOverlay, useCelebration } from "@/components/CelebrationOverlay";
 import { OnboardingOverlay } from "@/components/onboarding/OnboardingOverlay";
 import { useAudio } from "@/lib/useAudio";
@@ -56,6 +57,7 @@ export default function ReaderPage() {
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
 
   // Celebration hook
   const { celebration, celebrate, clear: clearCelebration } = useCelebration();
@@ -215,7 +217,8 @@ export default function ReaderPage() {
 
     if (currentIndex >= currentTokens.length - 1) {
       setIsPlaying(false);
-      // Trigger completion celebration
+      // Record passage completion and trigger celebration
+      statsStore.recordPassageCompletion();
       celebrate("complete", "Finished!");
       return;
     }
@@ -463,6 +466,10 @@ export default function ReaderPage() {
           e.preventDefault();
           setIsFeedbackModalOpen(true);
           break;
+        case "KeyA":
+          e.preventDefault();
+          setIsAnalyticsModalOpen(true);
+          break;
         case "KeyG":
           e.preventDefault();
           if (mode === "reading" && !isPlaying) {
@@ -471,7 +478,9 @@ export default function ReaderPage() {
           break;
         case "Escape":
           e.preventDefault();
-          if (isFeedbackModalOpen) {
+          if (isAnalyticsModalOpen) {
+            setIsAnalyticsModalOpen(false);
+          } else if (isFeedbackModalOpen) {
             setIsFeedbackModalOpen(false);
           } else if (isShortcutsModalOpen) {
             setIsShortcutsModalOpen(false);
@@ -524,7 +533,7 @@ export default function ReaderPage() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handlePlayPause, handleBack, handleForward, handleRestart, handleBookmark, handleToggleHighlight, isSidePanelOpen, isLibraryOpen, isShortcutsModalOpen, isFeedbackModalOpen, onboardingActive, reportOnboardingAction, mode, audio, gradualIncrease]);
+  }, [handlePlayPause, handleBack, handleForward, handleRestart, handleBookmark, handleToggleHighlight, isSidePanelOpen, isLibraryOpen, isShortcutsModalOpen, isFeedbackModalOpen, isAnalyticsModalOpen, onboardingActive, reportOnboardingAction, mode, audio, gradualIncrease]);
 
   // Loading state
   if (!isLoaded) {
@@ -769,6 +778,39 @@ export default function ReaderPage() {
             </button>
           )}
 
+          {/* Analytics button */}
+          <button
+            onClick={() => setIsAnalyticsModalOpen(true)}
+            title="Analytics (A)"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "36px",
+              height: "36px",
+              fontSize: "14px",
+              color: "var(--text-secondary)",
+              backgroundColor: "var(--bg-secondary)",
+              border: "1px solid var(--border)",
+              borderRadius: "8px",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 3v18h18" />
+              <path d="M18 17V9" />
+              <path d="M13 17V5" />
+              <path d="M8 17v-3" />
+            </svg>
+          </button>
+
           <ThemeToggle />
 
           {/* Feedback button - hide on mobile */}
@@ -1001,6 +1043,12 @@ export default function ReaderPage() {
         isOpen={isFeedbackModalOpen}
         onClose={() => setIsFeedbackModalOpen(false)}
         page="reader"
+      />
+
+      {/* Analytics Modal */}
+      <AnalyticsModal
+        isOpen={isAnalyticsModalOpen}
+        onClose={() => setIsAnalyticsModalOpen(false)}
       />
 
       {/* Celebration Overlay */}

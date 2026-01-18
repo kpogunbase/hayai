@@ -32,6 +32,7 @@ interface StatsState {
     startIndex: number;
     endIndex: number;
   }) => void;
+  recordPassageCompletion: () => void;
 
   // Computed
   getComputedStats: () => ComputedStats;
@@ -142,6 +143,7 @@ export const useStatsStore = create<StatsState>((set, get) => ({
           totalDocumentsRead: 1,
           totalWordsRead: session.wordsRead,
           totalReadingTimeSeconds: session.durationSeconds,
+          totalPassagesCompleted: 0,
           updatedAt: new Date().toISOString(),
         };
 
@@ -179,6 +181,33 @@ export const useStatsStore = create<StatsState>((set, get) => ({
     });
   },
 
+  recordPassageCompletion: () => {
+    const { totalStats } = get();
+
+    if (totalStats) {
+      set({
+        totalStats: {
+          ...totalStats,
+          totalPassagesCompleted: (totalStats.totalPassagesCompleted || 0) + 1,
+          updatedAt: new Date().toISOString(),
+        },
+      });
+    } else {
+      // Create initial stats if none exist
+      set({
+        totalStats: {
+          id: crypto.randomUUID(),
+          userId: '',
+          totalDocumentsRead: 0,
+          totalWordsRead: 0,
+          totalReadingTimeSeconds: 0,
+          totalPassagesCompleted: 1,
+          updatedAt: new Date().toISOString(),
+        },
+      });
+    }
+  },
+
   // Computed stats
   getComputedStats: (): ComputedStats => {
     const { totalStats, dailyStats } = get();
@@ -188,6 +217,7 @@ export const useStatsStore = create<StatsState>((set, get) => ({
       totalDocumentsRead: 0,
       totalWordsRead: 0,
       totalReadingTimeSeconds: 0,
+      totalPassagesCompleted: 0,
       wordsToday: 0,
       wordsThisWeek: 0,
       wordsThisMonth: 0,
@@ -242,6 +272,7 @@ export const useStatsStore = create<StatsState>((set, get) => ({
       totalDocumentsRead: totalStats.totalDocumentsRead,
       totalWordsRead: totalStats.totalWordsRead,
       totalReadingTimeSeconds: totalStats.totalReadingTimeSeconds,
+      totalPassagesCompleted: totalStats.totalPassagesCompleted || 0,
       wordsToday,
       wordsThisWeek,
       wordsThisMonth,

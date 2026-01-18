@@ -10,6 +10,7 @@ import { Footer } from "@/components/Footer";
 import { LibraryPanel } from "@/components/library/LibraryPanel";
 import { PasteTextModal } from "@/components/upload/PasteTextModal";
 import { FeedbackModal } from "@/components/FeedbackModal";
+import { AnalyticsModal } from "@/components/AnalyticsModal";
 import { OnboardingOverlay, DEMO_TEXT } from "@/components/onboarding/OnboardingOverlay";
 import { useAuth } from "@/components/AuthProvider";
 import { useIsMobile } from "@/lib/hooks/useIsMobile";
@@ -44,6 +45,7 @@ function HomePageContent() {
   const [inputMethod, setInputMethod] = useState<InputMethod>("upload");
   const [showPasteModal, setShowPasteModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
 
   // Library state
   const isLibraryOpen = useLibraryStore((s) => s.isOpen);
@@ -92,8 +94,13 @@ function HomePageContent() {
       } else if (e.key.toLowerCase() === "f") {
         e.preventDefault();
         setShowFeedbackModal(true);
+      } else if (e.key.toLowerCase() === "a") {
+        e.preventDefault();
+        setShowAnalyticsModal(true);
       } else if (e.key === "Escape") {
-        if (showFeedbackModal) {
+        if (showAnalyticsModal) {
+          setShowAnalyticsModal(false);
+        } else if (showFeedbackModal) {
           setShowFeedbackModal(false);
         } else if (showPasteModal) {
           setShowPasteModal(false);
@@ -105,7 +112,7 @@ function HomePageContent() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isLibraryOpen, setLibraryOpen, showPasteModal, showFeedbackModal]);
+  }, [isLibraryOpen, setLibraryOpen, showPasteModal, showFeedbackModal, showAnalyticsModal]);
 
   // Process and navigate to reader
   const processAndNavigate = useCallback(
@@ -358,6 +365,50 @@ function HomePageContent() {
               <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
             </svg>
             {!isMobile && "Library"}
+          </button>
+          {/* Analytics button */}
+          <button
+            onClick={() => setShowAnalyticsModal(true)}
+            title="Analytics (A)"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "6px",
+              padding: isMobile ? "8px" : "8px 12px",
+              fontSize: "14px",
+              color: "var(--text-secondary)",
+              backgroundColor: "var(--bg-secondary)",
+              border: "1px solid var(--border)",
+              borderRadius: "8px",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+              minWidth: isMobile ? "36px" : "auto",
+              minHeight: isMobile ? "36px" : "auto",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
+              e.currentTarget.style.color = "var(--text-primary)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
+              e.currentTarget.style.color = "var(--text-secondary)";
+            }}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M3 3v18h18" />
+              <path d="M18 17V9" />
+              <path d="M13 17V5" />
+              <path d="M8 17v-3" />
+            </svg>
+            {!isMobile && "Analytics"}
           </button>
           {/* Feedback button */}
           <button
@@ -748,7 +799,7 @@ function HomePageContent() {
                 textAlign: "center",
               }}
             >
-              Press <kbd style={kbdStyle}>L</kbd> to open Library, <kbd style={kbdStyle}>F</kbd> for Feedback
+              Press <kbd style={kbdStyle}>L</kbd> Library, <kbd style={kbdStyle}>A</kbd> Analytics, <kbd style={kbdStyle}>F</kbd> Feedback
             </p>
           )}
         </div>
@@ -777,6 +828,12 @@ function HomePageContent() {
         isOpen={showFeedbackModal}
         onClose={() => setShowFeedbackModal(false)}
         page="home"
+      />
+
+      {/* Analytics Modal */}
+      <AnalyticsModal
+        isOpen={showAnalyticsModal}
+        onClose={() => setShowAnalyticsModal(false)}
       />
 
       {/* Onboarding Overlay */}

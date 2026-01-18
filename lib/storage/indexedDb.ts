@@ -221,6 +221,7 @@ export async function updateStats(updates: Partial<LocalReadingStats>): Promise<
     totalDocumentsRead: 0,
     totalWordsRead: 0,
     totalReadingTimeSeconds: 0,
+    totalPassagesCompleted: 0,
     updatedAt: new Date().toISOString(),
     ...(existing || {}),
     ...updates,
@@ -240,6 +241,7 @@ export async function incrementStats(
     totalDocumentsRead: (existing?.totalDocumentsRead || 0) + (documentCompleted ? 1 : 0),
     totalWordsRead: (existing?.totalWordsRead || 0) + wordsRead,
     totalReadingTimeSeconds: (existing?.totalReadingTimeSeconds || 0) + readingTimeSeconds,
+    totalPassagesCompleted: existing?.totalPassagesCompleted || 0,
     updatedAt: new Date().toISOString(),
   };
   await db.put('stats', stats);

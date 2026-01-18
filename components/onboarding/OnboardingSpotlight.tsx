@@ -5,11 +5,13 @@ import { useEffect, useState } from "react";
 interface OnboardingSpotlightProps {
   targetRect: DOMRect | null;
   padding?: number;
+  allowInteraction?: boolean;
 }
 
 export function OnboardingSpotlight({
   targetRect,
   padding = 12,
+  allowInteraction = false,
 }: OnboardingSpotlightProps) {
   const [isAnimated, setIsAnimated] = useState(false);
 
@@ -48,18 +50,18 @@ export function OnboardingSpotlight({
 
   return (
     <>
-      {/* Full screen overlay - blocks clicks outside spotlight */}
+      {/* Full screen overlay - blocks clicks outside spotlight (unless allowInteraction) */}
       <div
         style={{
           position: "fixed",
           inset: 0,
           zIndex: 999,
-          pointerEvents: "auto",
+          pointerEvents: allowInteraction ? "none" : "auto",
         }}
       />
 
       {/* Cutout highlight */}
-      <div style={cutoutStyle}>
+      <div style={{ ...cutoutStyle, pointerEvents: "none" }}>
         {/* Pulsing ring animation */}
         <div
           style={{
@@ -73,19 +75,21 @@ export function OnboardingSpotlight({
         />
       </div>
 
-      {/* Allow clicks on the highlighted element */}
-      <div
-        style={{
-          position: "fixed",
-          top: targetRect.top,
-          left: targetRect.left,
-          width: targetRect.width,
-          height: targetRect.height,
-          zIndex: 1000,
-          pointerEvents: "auto",
-          cursor: "pointer",
-        }}
-      />
+      {/* Allow clicks on the highlighted element (when not in allowInteraction mode) */}
+      {!allowInteraction && (
+        <div
+          style={{
+            position: "fixed",
+            top: targetRect.top,
+            left: targetRect.left,
+            width: targetRect.width,
+            height: targetRect.height,
+            zIndex: 1000,
+            pointerEvents: "auto",
+            cursor: "pointer",
+          }}
+        />
+      )}
 
       <style jsx>{`
         @keyframes spotlightPulse {

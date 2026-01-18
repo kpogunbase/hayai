@@ -124,14 +124,21 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
     if (!isActive) return;
 
     const config = STEP_CONFIGS[currentStep];
-    // Use mobile-specific selector if on mobile and one exists
-    const selector = isMobile && config.mobileTargetSelector
-      ? config.mobileTargetSelector
-      : config.targetSelector;
+
+    // Special case: during shortcuts step celebration, target the modal instead
+    let selector: string | undefined;
+    if (currentStep === "shortcuts" && showStepCelebration) {
+      selector = "[data-onboarding='shortcuts-modal']";
+    } else {
+      // Use mobile-specific selector if on mobile and one exists
+      selector = isMobile && config.mobileTargetSelector
+        ? config.mobileTargetSelector
+        : config.targetSelector;
+    }
 
     if (selector) {
       const updateRect = () => {
-        const element = document.querySelector(selector);
+        const element = document.querySelector(selector!);
         if (element) {
           setTargetRect(element.getBoundingClientRect());
         } else {
@@ -153,7 +160,7 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
     } else {
       setTargetRect(null);
     }
-  }, [isActive, currentStep, isMobile]);
+  }, [isActive, currentStep, isMobile, showStepCelebration]);
 
   // Handle keyboard shortcuts during onboarding
   useEffect(() => {
@@ -249,9 +256,26 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
         />
       )}
 
-      {/* Spotlight for targeted steps */}
-      {!isFullScreen && targetRect && (
-        <OnboardingSpotlight targetRect={targetRect} />
+      {/* Dimmed background for success celebration states (except shortcuts which has its own spotlight) */}
+      {!isFullScreen && showStepCelebration && currentStep !== "shortcuts" && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            backdropFilter: "blur(4px)",
+            transition: "opacity 0.3s ease",
+            zIndex: 999,
+          }}
+        />
+      )}
+
+      {/* Spotlight for targeted steps (show during shortcuts celebration to highlight modal) */}
+      {!isFullScreen && targetRect && (!showStepCelebration || currentStep === "shortcuts") && (
+        <OnboardingSpotlight
+          targetRect={targetRect}
+          allowInteraction={currentStep === "speed"}
+        />
       )}
 
       {/* Full-screen welcome/complete content */}
@@ -354,19 +378,51 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
           )}
 
           {/* Description */}
-          <p
-            style={{
-              fontSize: isMobile ? "14px" : "16px",
-              color: "var(--text-secondary)",
-              margin: isMobile ? "0 0 24px" : "0 0 32px",
-              textAlign: "center",
-              maxWidth: "400px",
-              lineHeight: 1.6,
-              padding: isMobile ? "0 16px" : "0",
-            }}
-          >
-            {config.description}
-          </p>
+          {currentStep === "welcome" ? (
+            <div
+              style={{
+                textAlign: "center",
+                margin: isMobile ? "0 0 24px" : "0 0 32px",
+                maxWidth: "400px",
+                padding: isMobile ? "0 16px" : "0",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: isMobile ? "14px" : "16px",
+                  color: "var(--text-secondary)",
+                  margin: "0 0 8px",
+                  lineHeight: 1.6,
+                }}
+              >
+                Learn to speed read in under 60 seconds.
+              </p>
+              <p
+                style={{
+                  fontSize: isMobile ? "15px" : "17px",
+                  fontWeight: 500,
+                  color: "var(--text-primary)",
+                  margin: 0,
+                }}
+              >
+                Let's get started!
+              </p>
+            </div>
+          ) : (
+            <p
+              style={{
+                fontSize: isMobile ? "14px" : "16px",
+                color: "var(--text-secondary)",
+                margin: isMobile ? "0 0 24px" : "0 0 32px",
+                textAlign: "center",
+                maxWidth: "400px",
+                lineHeight: 1.6,
+                padding: isMobile ? "0 16px" : "0",
+              }}
+            >
+              {config.description}
+            </p>
+          )}
 
           {/* Additional hints for complete step - hide on mobile */}
           {currentStep === "complete" && !isMobile && (

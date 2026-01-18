@@ -97,7 +97,8 @@ export function OnboardingTooltip({
     };
 
     const arrowSize = 8;
-    const color = showSuccess ? "var(--success-bg, #10b981)" : "var(--bg-primary)";
+    // Use solid green for success state
+    const color = showSuccess ? "#10b981" : "var(--bg-primary)";
 
     switch (position) {
       case "top":
@@ -147,9 +148,12 @@ export function OnboardingTooltip({
         ...getTooltipStyle(),
         maxWidth: "320px",
         padding: "20px 24px",
-        backgroundColor: showSuccess ? "var(--success-bg, #10b981)" : "var(--bg-primary)",
+        // Use solid opaque colors for better visibility
+        backgroundColor: showSuccess ? "#10b981" : "var(--bg-primary)",
         borderRadius: "16px",
-        boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3)",
+        boxShadow: showSuccess
+          ? "0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 4px rgba(16, 185, 129, 0.3)"
+          : "0 20px 40px rgba(0, 0, 0, 0.3)",
         opacity: isVisible ? 1 : 0,
         transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
         zIndex: 1001,

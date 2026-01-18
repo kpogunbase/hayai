@@ -51,6 +51,7 @@ const shortcutGroups: ShortcutGroup[] = [
   {
     title: "Other",
     shortcuts: [
+      { keys: ["A"], description: "View analytics" },
       { keys: ["F"], description: "Send feedback" },
       { keys: ["?"], description: "Show this help" },
     ],
@@ -105,6 +106,7 @@ export function KeyboardShortcutsModal({
 
       {/* Modal */}
       <div
+        data-onboarding="shortcuts-modal"
         style={{
           position: "relative",
           width: "100%",
