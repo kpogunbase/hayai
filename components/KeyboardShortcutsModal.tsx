@@ -46,10 +46,23 @@ const allShortcutGroups: ShortcutGroup[] = [
       { keys: ["←"], description: "Back 10 words" },
       { keys: ["→"], description: "Forward 10 words" },
       { keys: ["R"], description: "Restart from beginning" },
-      { keys: ["M"], description: "Switch reading mode" },
       { keys: ["G"], description: "Toggle gradual increase" },
       { keys: ["+"], description: "Increase WPM (+25)" },
       { keys: ["-"], description: "Decrease WPM (-25)" },
+    ],
+    pages: ["reader"],
+  },
+  {
+    title: "Modes",
+    shortcuts: [
+      { keys: ["M"], description: "Toggle Reading / Challenge" },
+    ],
+    pages: ["reader"],
+  },
+  {
+    title: "Navigation",
+    shortcuts: [
+      { keys: ["N"], description: "New file (go to upload)" },
     ],
     pages: ["reader"],
   },

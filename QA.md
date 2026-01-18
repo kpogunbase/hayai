@@ -324,10 +324,11 @@ Run each check for at least 60–120 seconds to catch drift.
 | `←` | Back 10 words | [ ] |
 | `→` | Forward 10 words | [ ] |
 | `R` | Restart | [ ] |
-| `M` | Switch reading mode | [ ] |
+| `M` | Toggle Reading / Challenge mode | [ ] |
 | `G` | Toggle Gradual Increase | [ ] |
 | `+` / `=` | Increase WPM | [ ] |
 | `-` | Decrease WPM | [ ] |
+| `N` | New file (go to upload) | [ ] |
 | `S` | Toggle Side Panel | [ ] |
 | `L` | Toggle Library | [ ] |
 | `B` | Add Bookmark | [ ] |

@@ -73,8 +73,8 @@ export default function ReaderPage() {
   const [challengeStartTime, setChallengeStartTime] = useState<number | null>(null);
   const [currentChallengeWpm, setCurrentChallengeWpm] = useState(DEFAULT_CHALLENGE_CONFIG.startWpm);
 
-  // Gradual increase state
-  const [gradualIncrease, setGradualIncrease] = useState(false);
+  // Gradual increase state (on by default)
+  const [gradualIncrease, setGradualIncrease] = useState(true);
   const [currentGradualStage, setCurrentGradualStage] = useState(0);
 
   // Session tracking
@@ -510,10 +510,17 @@ export default function ReaderPage() {
           break;
         case "KeyM":
           e.preventDefault();
-          if (!isPlaying) {
-            const newMode = mode === "reading" ? "challenge" : "reading";
-            handleModeChange(newMode);
+          // Pause if playing, then switch mode
+          if (isPlaying) {
+            handlePlayPause();
           }
+          const newMode = mode === "reading" ? "challenge" : "reading";
+          handleModeChange(newMode);
+          break;
+        case "KeyN":
+          e.preventDefault();
+          // Navigate back to homepage for new file
+          router.push("/");
           break;
         case "Escape":
           e.preventDefault();
@@ -586,7 +593,7 @@ export default function ReaderPage() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handlePlayPause, handleBack, handleForward, handleRestart, handleBookmark, handleToggleHighlight, handleModeChange, isSidePanelOpen, isLibraryOpen, isShortcutsModalOpen, isFeedbackModalOpen, isAnalyticsModalOpen, onboardingActive, reportOnboardingAction, mode, audio, gradualIncrease]);
+  }, [handlePlayPause, handleBack, handleForward, handleRestart, handleBookmark, handleToggleHighlight, handleModeChange, router, isSidePanelOpen, isLibraryOpen, isShortcutsModalOpen, isFeedbackModalOpen, isAnalyticsModalOpen, onboardingActive, reportOnboardingAction, mode, audio, gradualIncrease, isPlaying]);
 
   // Loading state
   if (!isLoaded) {

@@ -277,9 +277,10 @@ interface OnboardingState {
 | `←` | Back 10 words |
 | `→` | Forward 10 words |
 | `R` | Restart from beginning |
-| `M` | Switch reading mode |
+| `M` | Toggle Reading / Challenge mode |
 | `G` | Toggle Gradual Increase |
 | `+` / `-` | Increase / Decrease WPM |
+| `N` | New file (go to upload) |
 | `S` | Toggle Side Panel |
 | `L` | Toggle Library |
 | `B` | Add Bookmark |
