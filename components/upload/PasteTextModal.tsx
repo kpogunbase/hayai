@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 
 interface PasteTextModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export function PasteTextModal({
   const [text, setText] = useState("");
   const [title, setTitle] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isMobile = useIsMobile();
 
   // Focus textarea when modal opens
   useEffect(() => {
@@ -73,9 +75,9 @@ export function PasteTextModal({
         position: "fixed",
         inset: 0,
         display: "flex",
-        alignItems: "center",
+        alignItems: isMobile ? "flex-end" : "center",
         justifyContent: "center",
-        padding: "24px",
+        padding: isMobile ? "0" : "24px",
         zIndex: 100,
       }}
       onKeyDown={handleKeyDown}
@@ -96,10 +98,10 @@ export function PasteTextModal({
         style={{
           position: "relative",
           width: "100%",
-          maxWidth: "600px",
-          maxHeight: "80vh",
+          maxWidth: isMobile ? "100%" : "600px",
+          maxHeight: isMobile ? "90vh" : "80vh",
           backgroundColor: "var(--bg-primary)",
-          borderRadius: "16px",
+          borderRadius: isMobile ? "16px 16px 0 0" : "16px",
           boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
           display: "flex",
           flexDirection: "column",
@@ -258,21 +260,23 @@ export function PasteTextModal({
         {/* Footer */}
         <div
           style={{
-            padding: "16px 24px",
+            padding: isMobile ? "12px 16px" : "16px 24px",
             borderTop: "1px solid var(--border)",
             display: "flex",
             alignItems: "center",
-            justifyContent: "space-between",
+            justifyContent: isMobile ? "flex-end" : "space-between",
           }}
         >
-          <span
-            style={{
-              fontSize: "12px",
-              color: "var(--text-tertiary)",
-            }}
-          >
-            <kbd style={kbdStyle}>⌘</kbd> + <kbd style={kbdStyle}>Enter</kbd> to submit
-          </span>
+          {!isMobile && (
+            <span
+              style={{
+                fontSize: "12px",
+                color: "var(--text-tertiary)",
+              }}
+            >
+              <kbd style={kbdStyle}>⌘</kbd> + <kbd style={kbdStyle}>Enter</kbd> to submit
+            </span>
+          )}
           <div style={{ display: "flex", gap: "8px" }}>
             <button
               onClick={onClose}

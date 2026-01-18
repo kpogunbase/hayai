@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 
 interface FeedbackModalProps {
   isOpen: boolean;
@@ -68,6 +69,7 @@ export function FeedbackModal({ isOpen, onClose, page }: FeedbackModalProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const { session } = useAuth();
+  const isMobile = useIsMobile();
 
   // Check for speech recognition support
   useEffect(() => {
@@ -220,9 +222,9 @@ export function FeedbackModal({ isOpen, onClose, page }: FeedbackModalProps) {
         position: "fixed",
         inset: 0,
         display: "flex",
-        alignItems: "center",
+        alignItems: isMobile ? "flex-end" : "center",
         justifyContent: "center",
-        padding: "24px",
+        padding: isMobile ? "0" : "24px",
         zIndex: 100,
       }}
       onKeyDown={handleKeyDown}
@@ -246,10 +248,10 @@ export function FeedbackModal({ isOpen, onClose, page }: FeedbackModalProps) {
         style={{
           position: "relative",
           width: "100%",
-          maxWidth: "500px",
-          maxHeight: "80vh",
+          maxWidth: isMobile ? "100%" : "500px",
+          maxHeight: isMobile ? "85vh" : "80vh",
           backgroundColor: "var(--bg-primary)",
-          borderRadius: "16px",
+          borderRadius: isMobile ? "16px 16px 0 0" : "16px",
           boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
           display: "flex",
           flexDirection: "column",
@@ -467,21 +469,23 @@ export function FeedbackModal({ isOpen, onClose, page }: FeedbackModalProps) {
         {/* Footer */}
         <div
           style={{
-            padding: "16px 24px",
+            padding: isMobile ? "12px 16px" : "16px 24px",
             borderTop: "1px solid var(--border)",
             display: "flex",
             alignItems: "center",
-            justifyContent: "space-between",
+            justifyContent: isMobile ? "flex-end" : "space-between",
           }}
         >
-          <span
-            style={{
-              fontSize: "12px",
-              color: "var(--text-tertiary)",
-            }}
-          >
-            <kbd style={kbdStyle}>⌘</kbd> + <kbd style={kbdStyle}>Enter</kbd> to submit
-          </span>
+          {!isMobile && (
+            <span
+              style={{
+                fontSize: "12px",
+                color: "var(--text-tertiary)",
+              }}
+            >
+              <kbd style={kbdStyle}>⌘</kbd> + <kbd style={kbdStyle}>Enter</kbd> to submit
+            </span>
+          )}
           <div style={{ display: "flex", gap: "8px" }}>
             <button
               onClick={() => {

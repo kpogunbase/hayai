@@ -78,6 +78,18 @@ export function CelebrationOverlay({
         zIndex: 200,
       }}
     >
+      {/* Dimmed background */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundColor: "rgba(0, 0, 0, 0.6)",
+          backdropFilter: "blur(4px)",
+          opacity: phase === "exit" ? 0 : phase === "enter" ? 0 : 1,
+          transition: "opacity 0.4s ease-out",
+        }}
+      />
+
       {/* Radial burst rings */}
       <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
         {[...Array(4)].map((_, i) => (

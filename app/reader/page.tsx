@@ -592,18 +592,19 @@ export default function ReaderPage() {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          padding: "16px 24px",
+          padding: isMobile ? "12px 12px" : "16px 24px",
           borderBottom: "1px solid var(--border)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? "4px" : "8px" }}>
           <button
             onClick={() => router.push("/")}
             style={{
               display: "flex",
               alignItems: "center",
+              justifyContent: "center",
               gap: "8px",
-              padding: "8px 12px",
+              padding: isMobile ? "8px" : "8px 12px",
               fontSize: "14px",
               fontWeight: 500,
               color: "var(--text-secondary)",
@@ -612,6 +613,8 @@ export default function ReaderPage() {
               borderRadius: "8px",
               cursor: "pointer",
               transition: "color 0.15s",
+              minWidth: isMobile ? "36px" : "auto",
+              minHeight: isMobile ? "36px" : "auto",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.color = "var(--text-primary)";
@@ -623,7 +626,7 @@ export default function ReaderPage() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
-            New file
+            {!isMobile && "New file"}
           </button>
 
           {/* Library button */}
@@ -633,8 +636,9 @@ export default function ReaderPage() {
             style={{
               display: "flex",
               alignItems: "center",
+              justifyContent: "center",
               gap: "6px",
-              padding: "8px 12px",
+              padding: isMobile ? "8px" : "8px 12px",
               fontSize: "14px",
               color: "var(--text-secondary)",
               backgroundColor: "var(--bg-secondary)",
@@ -642,6 +646,8 @@ export default function ReaderPage() {
               borderRadius: "8px",
               cursor: "pointer",
               transition: "all 0.15s ease",
+              minWidth: isMobile ? "36px" : "auto",
+              minHeight: isMobile ? "36px" : "auto",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
@@ -657,137 +663,145 @@ export default function ReaderPage() {
           </button>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          {/* Bookmark button */}
-          <button
-            onClick={handleBookmark}
-            title="Bookmark (B)"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "36px",
-              height: "36px",
-              fontSize: "14px",
-              color: "var(--text-secondary)",
-              backgroundColor: "var(--bg-secondary)",
-              border: "1px solid var(--border)",
-              borderRadius: "8px",
-              cursor: "pointer",
-              transition: "all 0.15s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-            </svg>
-          </button>
-
-          {/* Highlight button */}
-          <button
-            onClick={handleToggleHighlight}
-            title="Highlight (H)"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "36px",
-              height: "36px",
-              fontSize: "14px",
-              color: isHighlighting ? "var(--accent)" : "var(--text-secondary)",
-              backgroundColor: isHighlighting ? "var(--highlight-active)" : "var(--bg-secondary)",
-              border: `1px solid ${isHighlighting ? "var(--accent)" : "var(--border)"}`,
-              borderRadius: "8px",
-              cursor: "pointer",
-              transition: "all 0.15s ease",
-            }}
-            onMouseEnter={(e) => {
-              if (!isHighlighting) {
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? "4px" : "8px" }}>
+          {/* Bookmark button - hide on mobile */}
+          {!isMobile && (
+            <button
+              onClick={handleBookmark}
+              title="Bookmark (B)"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "36px",
+                height: "36px",
+                fontSize: "14px",
+                color: "var(--text-secondary)",
+                backgroundColor: "var(--bg-secondary)",
+                border: "1px solid var(--border)",
+                borderRadius: "8px",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isHighlighting) {
+              }}
+              onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
-              }
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-            </svg>
-          </button>
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+              </svg>
+            </button>
+          )}
 
-          {/* Side panel button */}
-          <button
-            onClick={() => setIsSidePanelOpen(!isSidePanelOpen)}
-            title="Side panel (S)"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "36px",
-              height: "36px",
-              fontSize: "14px",
-              color: isSidePanelOpen ? "var(--accent)" : "var(--text-secondary)",
-              backgroundColor: isSidePanelOpen ? "var(--highlight-active)" : "var(--bg-secondary)",
-              border: `1px solid ${isSidePanelOpen ? "var(--accent)" : "var(--border)"}`,
-              borderRadius: "8px",
-              cursor: "pointer",
-              transition: "all 0.15s ease",
-            }}
-            onMouseEnter={(e) => {
-              if (!isSidePanelOpen) {
-                e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isSidePanelOpen) {
-                e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
-              }
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-              <line x1="15" y1="3" x2="15" y2="21" />
-            </svg>
-          </button>
+          {/* Highlight button - hide on mobile */}
+          {!isMobile && (
+            <button
+              onClick={handleToggleHighlight}
+              title="Highlight (H)"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "36px",
+                height: "36px",
+                fontSize: "14px",
+                color: isHighlighting ? "var(--accent)" : "var(--text-secondary)",
+                backgroundColor: isHighlighting ? "var(--highlight-active)" : "var(--bg-secondary)",
+                border: `1px solid ${isHighlighting ? "var(--accent)" : "var(--border)"}`,
+                borderRadius: "8px",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                if (!isHighlighting) {
+                  e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isHighlighting) {
+                  e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
+                }
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+              </svg>
+            </button>
+          )}
+
+          {/* Side panel button - hide on mobile */}
+          {!isMobile && (
+            <button
+              onClick={() => setIsSidePanelOpen(!isSidePanelOpen)}
+              title="Side panel (S)"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "36px",
+                height: "36px",
+                fontSize: "14px",
+                color: isSidePanelOpen ? "var(--accent)" : "var(--text-secondary)",
+                backgroundColor: isSidePanelOpen ? "var(--highlight-active)" : "var(--bg-secondary)",
+                border: `1px solid ${isSidePanelOpen ? "var(--accent)" : "var(--border)"}`,
+                borderRadius: "8px",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                if (!isSidePanelOpen) {
+                  e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isSidePanelOpen) {
+                  e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
+                }
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <line x1="15" y1="3" x2="15" y2="21" />
+              </svg>
+            </button>
+          )}
 
           <ThemeToggle />
 
-          {/* Feedback button */}
-          <button
-            onClick={() => setIsFeedbackModalOpen(true)}
-            title="Send Feedback (F)"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "36px",
-              height: "36px",
-              fontSize: "14px",
-              color: "var(--text-secondary)",
-              backgroundColor: "var(--bg-secondary)",
-              border: "1px solid var(--border)",
-              borderRadius: "8px",
-              cursor: "pointer",
-              transition: "all 0.15s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-          </button>
+          {/* Feedback button - hide on mobile */}
+          {!isMobile && (
+            <button
+              onClick={() => setIsFeedbackModalOpen(true)}
+              title="Send Feedback (F)"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "36px",
+                height: "36px",
+                fontSize: "14px",
+                color: "var(--text-secondary)",
+                backgroundColor: "var(--bg-secondary)",
+                border: "1px solid var(--border)",
+                borderRadius: "8px",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+            </button>
+          )}
         </div>
       </header>
 
@@ -821,9 +835,9 @@ export default function ReaderPage() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          padding: "24px",
-          gap: "32px",
-          marginRight: isSidePanelOpen ? "360px" : 0,
+          padding: isMobile ? "16px 12px" : "24px",
+          gap: isMobile ? "20px" : "32px",
+          marginRight: isSidePanelOpen && !isMobile ? "360px" : 0,
           transition: "margin-right 0.2s ease",
         }}
       >
@@ -854,15 +868,16 @@ export default function ReaderPage() {
           data-onboarding="rsvp-display"
           style={{
             width: "100%",
-            maxWidth: "700px",
-            minHeight: "140px",
+            maxWidth: isMobile ? "100%" : "700px",
+            minHeight: isMobile ? "100px" : "140px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: isHighlighting ? "var(--highlight-yellow)" : "var(--bg-secondary)",
-            borderRadius: "16px",
+            borderRadius: isMobile ? "12px" : "16px",
             border: `1px solid ${isHighlighting ? "var(--accent)" : "var(--border)"}`,
             transition: "all 0.15s ease",
+            padding: isMobile ? "16px 8px" : "0",
           }}
         >
           <RsvpWord token={currentToken} />

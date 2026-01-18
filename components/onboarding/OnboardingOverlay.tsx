@@ -270,21 +270,21 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
           {/* Logo/Icon */}
           <div
             style={{
-              width: "80px",
-              height: "80px",
-              borderRadius: "20px",
+              width: isMobile ? "64px" : "80px",
+              height: isMobile ? "64px" : "80px",
+              borderRadius: isMobile ? "16px" : "20px",
               backgroundColor: "var(--accent)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              marginBottom: "32px",
+              marginBottom: isMobile ? "24px" : "32px",
               boxShadow: "0 0 60px var(--accent)",
             }}
           >
             {currentStep === "complete" ? (
               <svg
-                width="40"
-                height="40"
+                width={isMobile ? "32" : "40"}
+                height={isMobile ? "32" : "40"}
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="#fff"
@@ -296,8 +296,8 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
               </svg>
             ) : (
               <svg
-                width="40"
-                height="40"
+                width={isMobile ? "32" : "40"}
+                height={isMobile ? "32" : "40"}
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="#fff"
@@ -314,7 +314,7 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
           {/* Title */}
           <h1
             style={{
-              fontSize: "32px",
+              fontSize: isMobile ? "24px" : "32px",
               fontWeight: 700,
               color: "var(--text-primary)",
               margin: "0 0 12px",
@@ -327,19 +327,20 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
           {/* Description */}
           <p
             style={{
-              fontSize: "16px",
+              fontSize: isMobile ? "14px" : "16px",
               color: "var(--text-secondary)",
-              margin: "0 0 32px",
+              margin: isMobile ? "0 0 24px" : "0 0 32px",
               textAlign: "center",
               maxWidth: "400px",
               lineHeight: 1.6,
+              padding: isMobile ? "0 16px" : "0",
             }}
           >
             {config.description}
           </p>
 
-          {/* Additional hints for complete step */}
-          {currentStep === "complete" && (
+          {/* Additional hints for complete step - hide on mobile */}
+          {currentStep === "complete" && !isMobile && (
             <div
               style={{
                 display: "flex",
@@ -396,8 +397,8 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
           <button
             onClick={handleAction}
             style={{
-              padding: "16px 48px",
-              fontSize: "16px",
+              padding: isMobile ? "14px 36px" : "16px 48px",
+              fontSize: isMobile ? "15px" : "16px",
               fontWeight: 600,
               color: "#fff",
               backgroundColor: "var(--accent)",
@@ -483,7 +484,7 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
       <div
         style={{
           position: "fixed",
-          bottom: "80px",
+          bottom: isMobile ? "24px" : "80px",
           left: "50%",
           transform: "translateX(-50%)",
           display: "flex",

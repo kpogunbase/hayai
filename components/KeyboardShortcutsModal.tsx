@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useCallback } from "react";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 
 interface KeyboardShortcutsModalProps {
   isOpen: boolean;
@@ -60,6 +61,8 @@ export function KeyboardShortcutsModal({
   isOpen,
   onClose,
 }: KeyboardShortcutsModalProps) {
+  const isMobile = useIsMobile();
+
   // Close on escape
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -83,9 +86,9 @@ export function KeyboardShortcutsModal({
         position: "fixed",
         inset: 0,
         display: "flex",
-        alignItems: "center",
+        alignItems: isMobile ? "flex-end" : "center",
         justifyContent: "center",
-        padding: "24px",
+        padding: isMobile ? "0" : "24px",
         zIndex: 100,
       }}
     >
@@ -105,9 +108,10 @@ export function KeyboardShortcutsModal({
         style={{
           position: "relative",
           width: "100%",
-          maxWidth: "480px",
+          maxWidth: isMobile ? "100%" : "480px",
+          maxHeight: isMobile ? "80vh" : "auto",
           backgroundColor: "var(--bg-primary)",
-          borderRadius: "16px",
+          borderRadius: isMobile ? "16px 16px 0 0" : "16px",
           boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
           overflow: "hidden",
           animation: "modalSlideIn 200ms ease-out",
@@ -238,25 +242,27 @@ export function KeyboardShortcutsModal({
           ))}
         </div>
 
-        {/* Footer */}
-        <div
-          style={{
-            padding: "16px 24px",
-            borderTop: "1px solid var(--border)",
-            backgroundColor: "var(--bg-secondary)",
-          }}
-        >
-          <p
+        {/* Footer - hide on mobile */}
+        {!isMobile && (
+          <div
             style={{
-              fontSize: "13px",
-              color: "var(--text-tertiary)",
-              margin: 0,
-              textAlign: "center",
+              padding: "16px 24px",
+              borderTop: "1px solid var(--border)",
+              backgroundColor: "var(--bg-secondary)",
             }}
           >
-            Press <kbd style={footerKbdStyle}>?</kbd> anytime to show this help
-          </p>
-        </div>
+            <p
+              style={{
+                fontSize: "13px",
+                color: "var(--text-tertiary)",
+                margin: 0,
+                textAlign: "center",
+              }}
+            >
+              Press <kbd style={footerKbdStyle}>?</kbd> anytime to show this help
+            </p>
+          </div>
+        )}
       </div>
 
       <style jsx>{`

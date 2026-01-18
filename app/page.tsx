@@ -12,6 +12,7 @@ import { PasteTextModal } from "@/components/upload/PasteTextModal";
 import { FeedbackModal } from "@/components/FeedbackModal";
 import { OnboardingOverlay, DEMO_TEXT } from "@/components/onboarding/OnboardingOverlay";
 import { useAuth } from "@/components/AuthProvider";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 import { parseFile } from "@/lib/parse";
 import { tokenize } from "@/lib/tokenize";
 import { useLibraryStore } from "@/lib/stores/libraryStore";
@@ -34,6 +35,7 @@ function HomePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, subscription, isLoading: authLoading } = useAuth();
+  const isMobile = useIsMobile();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -310,10 +312,10 @@ function HomePageContent() {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          padding: "16px 24px",
+          padding: isMobile ? "12px 16px" : "16px 24px",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? "8px" : "12px" }}>
           <ThemeToggle />
           {/* Library button */}
           <button
@@ -322,8 +324,9 @@ function HomePageContent() {
             style={{
               display: "flex",
               alignItems: "center",
+              justifyContent: "center",
               gap: "6px",
-              padding: "8px 12px",
+              padding: isMobile ? "8px" : "8px 12px",
               fontSize: "14px",
               color: "var(--text-secondary)",
               backgroundColor: "var(--bg-secondary)",
@@ -331,6 +334,8 @@ function HomePageContent() {
               borderRadius: "8px",
               cursor: "pointer",
               transition: "all 0.15s ease",
+              minWidth: isMobile ? "36px" : "auto",
+              minHeight: isMobile ? "36px" : "auto",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
@@ -352,7 +357,7 @@ function HomePageContent() {
               <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
               <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
             </svg>
-            Library
+            {!isMobile && "Library"}
           </button>
           {/* Feedback button */}
           <button
@@ -361,8 +366,9 @@ function HomePageContent() {
             style={{
               display: "flex",
               alignItems: "center",
+              justifyContent: "center",
               gap: "6px",
-              padding: "8px 12px",
+              padding: isMobile ? "8px" : "8px 12px",
               fontSize: "14px",
               color: "var(--text-secondary)",
               backgroundColor: "var(--bg-secondary)",
@@ -370,6 +376,8 @@ function HomePageContent() {
               borderRadius: "8px",
               cursor: "pointer",
               transition: "all 0.15s ease",
+              minWidth: isMobile ? "36px" : "auto",
+              minHeight: isMobile ? "36px" : "auto",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
@@ -390,7 +398,7 @@ function HomePageContent() {
             >
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
-            Feedback
+            {!isMobile && "Feedback"}
           </button>
         </div>
         {/* DISABLED: onUpgradeClick prop removed to hide upgrade option */}
@@ -439,7 +447,7 @@ function HomePageContent() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          padding: "24px",
+          padding: isMobile ? "16px" : "24px",
         }}
       >
         <div
@@ -449,10 +457,10 @@ function HomePageContent() {
           }}
         >
           {/* Logo/Title */}
-          <div style={{ textAlign: "center", marginBottom: "48px" }}>
+          <div style={{ textAlign: "center", marginBottom: isMobile ? "32px" : "48px" }}>
             <h1
               style={{
-                fontSize: "38px",
+                fontSize: isMobile ? "28px" : "38px",
                 fontWeight: 500,
                 marginBottom: "12px",
                 color: "var(--text-primary)",
@@ -464,7 +472,7 @@ function HomePageContent() {
             </h1>
             <p
               style={{
-                fontSize: "17px",
+                fontSize: isMobile ? "15px" : "17px",
                 color: "var(--text-secondary)",
                 margin: 0,
                 lineHeight: 1.5,
@@ -730,17 +738,19 @@ function HomePageContent() {
             Your files are processed locally and never uploaded to any server.
           </p>
 
-          {/* Keyboard hint */}
-          <p
-            style={{
-              fontSize: "12px",
-              color: "var(--text-tertiary)",
-              marginTop: "8px",
-              textAlign: "center",
-            }}
-          >
-            Press <kbd style={kbdStyle}>L</kbd> to open Library, <kbd style={kbdStyle}>F</kbd> for Feedback
-          </p>
+          {/* Keyboard hint - hide on mobile */}
+          {!isMobile && (
+            <p
+              style={{
+                fontSize: "12px",
+                color: "var(--text-tertiary)",
+                marginTop: "8px",
+                textAlign: "center",
+              }}
+            >
+              Press <kbd style={kbdStyle}>L</kbd> to open Library, <kbd style={kbdStyle}>F</kbd> for Feedback
+            </p>
+          )}
         </div>
       </div>
 

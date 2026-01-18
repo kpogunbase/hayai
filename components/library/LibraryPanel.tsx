@@ -3,6 +3,7 @@
 import { useEffect, useCallback, useState } from "react";
 import { useLibraryStore } from "@/lib/stores/libraryStore";
 import { useAuth } from "@/components/AuthProvider";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 import { getDocuments } from "@/lib/storage/documentStorage";
 import { LibraryDocumentCard } from "./LibraryDocumentCard";
 import { LibrarySearch } from "./LibrarySearch";
@@ -17,6 +18,7 @@ interface LibraryPanelProps {
 
 export function LibraryPanel({ isOpen, onClose, onDocumentSelect }: LibraryPanelProps) {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [isLoading, setIsLoading] = useState(false);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -196,18 +198,20 @@ export function LibraryPanel({ isOpen, onClose, onDocumentSelect }: LibraryPanel
           )}
         </div>
 
-        {/* Keyboard hint */}
-        <div
-          style={{
-            padding: "12px 16px",
-            borderTop: "1px solid var(--border)",
-            fontSize: "12px",
-            color: "var(--text-tertiary)",
-            textAlign: "center",
-          }}
-        >
-          Press <kbd style={kbdStyle}>L</kbd> or <kbd style={kbdStyle}>Esc</kbd> to close
-        </div>
+        {/* Keyboard hint - hide on mobile */}
+        {!isMobile && (
+          <div
+            style={{
+              padding: "12px 16px",
+              borderTop: "1px solid var(--border)",
+              fontSize: "12px",
+              color: "var(--text-tertiary)",
+              textAlign: "center",
+            }}
+          >
+            Press <kbd style={kbdStyle}>L</kbd> or <kbd style={kbdStyle}>Esc</kbd> to close
+          </div>
+        )}
       </div>
     </>
   );
