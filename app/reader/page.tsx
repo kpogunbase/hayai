@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { RsvpWord } from "@/components/RsvpWord";
 import { ReaderControls } from "@/components/ReaderControls";
-import { WpmSlider } from "@/components/WpmSlider";
+import { WpmSlider, GRADUAL_STAGES } from "@/components/WpmSlider";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ModeSelector, ReaderMode } from "@/components/ModeSelector";
@@ -70,6 +70,10 @@ export default function ReaderPage() {
   const [challengeStartTime, setChallengeStartTime] = useState<number | null>(null);
   const [currentChallengeWpm, setCurrentChallengeWpm] = useState(DEFAULT_CHALLENGE_CONFIG.startWpm);
 
+  // Gradual increase state
+  const [gradualIncrease, setGradualIncrease] = useState(false);
+  const [currentGradualStage, setCurrentGradualStage] = useState(0);
+
   // Session tracking
   const sessionStartRef = useRef<number | null>(null);
   const sessionStartIndexRef = useRef<number>(0);
@@ -91,6 +95,7 @@ export default function ReaderPage() {
   const modeRef = useRef(mode);
   const challengeStartTimeRef = useRef(challengeStartTime);
   const challengeDurationRef = useRef(challengeDuration);
+  const gradualIncreaseRef = useRef(gradualIncrease);
 
   // Keep refs in sync with state
   useEffect(() => { indexRef.current = index; }, [index]);
@@ -100,6 +105,7 @@ export default function ReaderPage() {
   useEffect(() => { modeRef.current = mode; }, [mode]);
   useEffect(() => { challengeStartTimeRef.current = challengeStartTime; }, [challengeStartTime]);
   useEffect(() => { challengeDurationRef.current = challengeDuration; }, [challengeDuration]);
+  useEffect(() => { gradualIncreaseRef.current = gradualIncrease; }, [gradualIncrease]);
 
   // Helper to detect chapter markers (for EPUB/long texts)
   const isChapterMarker = useCallback((tokenIndex: number, tokenArray: string[]): boolean => {
@@ -152,9 +158,34 @@ export default function ReaderPage() {
     router.push("/");
   }, [router, readerStore.tokens, readerStore.documentId, readerStore.rawText]);
 
+  // Helper to calculate gradual increase stage based on progress
+  const getGradualStageAndWpm = useCallback((currentIndex: number, totalTokens: number): { stage: number; wpm: number } => {
+    if (totalTokens === 0) return { stage: 0, wpm: GRADUAL_STAGES[0] };
+
+    // Calculate progress as percentage (0-1)
+    const progress = currentIndex / totalTokens;
+
+    // 5 stages, each covering 20% of the text
+    // Stage 0: 0-20% (300 WPM)
+    // Stage 1: 20-40% (360 WPM)
+    // Stage 2: 40-60% (450 WPM)
+    // Stage 3: 60-80% (600 WPM)
+    // Stage 4: 80-100% (900 WPM)
+    const stage = Math.min(Math.floor(progress * 5), 4);
+
+    return { stage, wpm: GRADUAL_STAGES[stage] };
+  }, []);
+
   // Get effective WPM based on mode
   const getEffectiveWpm = useCallback(() => {
     if (modeRef.current === "reading") {
+      // Check if gradual increase is enabled
+      if (gradualIncreaseRef.current) {
+        const { stage, wpm } = getGradualStageAndWpm(indexRef.current, tokensRef.current.length);
+        // Update stage state (will be used for display)
+        setCurrentGradualStage(stage);
+        return wpm;
+      }
       return wpmRef.current;
     }
     const startTime = challengeStartTimeRef.current;
@@ -166,7 +197,7 @@ export default function ReaderPage() {
       durationMs: CHALLENGE_DURATIONS[challengeDurationRef.current],
     };
     return getChallengeWpm(elapsed, config);
-  }, []);
+  }, [getGradualStageAndWpm]);
 
   // Schedule next token
   const scheduleNextTick = useCallback(() => {
@@ -290,6 +321,7 @@ export default function ReaderPage() {
     setIndex(0);
     setChallengeStartTime(null);
     setCurrentChallengeWpm(DEFAULT_CHALLENGE_CONFIG.startWpm);
+    setCurrentGradualStage(0);
     audio.pause();
   }, [audio, recordSession]);
 
@@ -444,10 +476,14 @@ export default function ReaderPage() {
           }
           break;
         // WPM control: + or = to increase, - to decrease
+        // When gradual increase is enabled, disable WPM and turn off gradual mode
         case "Equal":
         case "NumpadAdd":
           e.preventDefault();
           if (mode === "reading") {
+            if (gradualIncrease) {
+              setGradualIncrease(false);
+            }
             setWpm((prev) => Math.min(900, prev + 25));
           }
           break;
@@ -455,6 +491,9 @@ export default function ReaderPage() {
         case "NumpadSubtract":
           e.preventDefault();
           if (mode === "reading") {
+            if (gradualIncrease) {
+              setGradualIncrease(false);
+            }
             setWpm((prev) => Math.max(100, prev - 25));
           }
           break;
@@ -479,7 +518,7 @@ export default function ReaderPage() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handlePlayPause, handleBack, handleForward, handleRestart, handleBookmark, handleToggleHighlight, isSidePanelOpen, isLibraryOpen, isShortcutsModalOpen, isFeedbackModalOpen, onboardingActive, reportOnboardingAction, mode, audio]);
+  }, [handlePlayPause, handleBack, handleForward, handleRestart, handleBookmark, handleToggleHighlight, isSidePanelOpen, isLibraryOpen, isShortcutsModalOpen, isFeedbackModalOpen, onboardingActive, reportOnboardingAction, mode, audio, gradualIncrease]);
 
   // Loading state
   if (!isLoaded) {
@@ -513,7 +552,11 @@ export default function ReaderPage() {
   }
 
   const currentToken = tokens[index] || "";
-  const displayWpm = mode === "challenge" ? currentChallengeWpm : wpm;
+  const displayWpm = mode === "challenge"
+    ? currentChallengeWpm
+    : gradualIncrease
+      ? GRADUAL_STAGES[currentGradualStage]
+      : wpm;
 
   // Get bookmarks and highlights for current document
   const bookmarks = readerStore.bookmarks.filter((b) => b.documentId === documentId);
@@ -783,7 +826,7 @@ export default function ReaderPage() {
           style={{
             fontSize: "14px",
             fontWeight: 600,
-            color: mode === "challenge" ? "var(--accent)" : "var(--text-tertiary)",
+            color: mode === "challenge" || (mode === "reading" && gradualIncrease) ? "var(--accent)" : "var(--text-tertiary)",
             fontVariantNumeric: "tabular-nums",
           }}
         >
@@ -791,6 +834,11 @@ export default function ReaderPage() {
           {mode === "challenge" && (
             <span style={{ fontWeight: 400, marginLeft: "8px", color: "var(--text-tertiary)" }}>
               (Challenge)
+            </span>
+          )}
+          {mode === "reading" && gradualIncrease && (
+            <span style={{ fontWeight: 400, marginLeft: "8px", color: "var(--text-tertiary)" }}>
+              (Gradual {currentGradualStage + 1}/5)
             </span>
           )}
         </div>
@@ -853,7 +901,14 @@ export default function ReaderPage() {
         {/* WPM Slider (only in reading mode) */}
         {mode === "reading" && (
           <div data-onboarding="wpm-slider" style={{ width: "100%", maxWidth: "320px" }}>
-            <WpmSlider wpm={wpm} onChange={handleWpmChange} />
+            <WpmSlider
+              wpm={wpm}
+              onChange={handleWpmChange}
+              gradualIncrease={gradualIncrease}
+              onGradualIncreaseChange={setGradualIncrease}
+              currentStage={currentGradualStage}
+              disabled={isPlaying}
+            />
           </div>
         )}
 
