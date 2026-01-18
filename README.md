@@ -53,6 +53,7 @@ Hayai is a modern speed reading web application that uses RSVP (Rapid Serial Vis
 | `L` | Toggle Library |
 | `A` | View Analytics |
 | `F` | Send Feedback |
+| `Cmd/Ctrl + ,` | Profile settings (when signed in) |
 | `?` | Show Keyboard Shortcuts |
 | `Esc` | Close Open Panel |
 
@@ -88,6 +89,7 @@ Hayai is a modern speed reading web application that uses RSVP (Rapid Serial Vis
 | `H` | Start / End Highlight |
 | `A` | View Analytics |
 | `F` | Send Feedback |
+| `Cmd/Ctrl + ,` | Profile settings (when signed in) |
 | `?` | Show Keyboard Shortcuts |
 | `,` / `.` | Previous / Next Audio Track |
 | `Esc` | Close Open Panel |

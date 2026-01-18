@@ -303,6 +303,7 @@ Run each check for at least 60–120 seconds to catch drift.
 | `L` | Toggle Library | [ ] |
 | `A` | View Analytics | [ ] |
 | `F` | Send Feedback | [ ] |
+| `Cmd/Ctrl + ,` | Profile settings (when signed in) | [ ] |
 | `?` | Show Keyboard Shortcuts | [ ] |
 | `Esc` | Close open panel | [ ] |
 
@@ -335,6 +336,7 @@ Run each check for at least 60–120 seconds to catch drift.
 | `H` | Start/End Highlight | [ ] |
 | `A` | View Analytics | [ ] |
 | `F` | Send Feedback | [ ] |
+| `Cmd/Ctrl + ,` | Profile settings (when signed in) | [ ] |
 | `?` | Show Keyboard Shortcuts | [ ] |
 | `,` | Previous Audio Track | [ ] |
 | `.` | Next Audio Track | [ ] |

@@ -15,6 +15,8 @@ import { FeedbackModal } from "@/components/FeedbackModal";
 import { AnalyticsModal } from "@/components/AnalyticsModal";
 import { CelebrationOverlay, useCelebration } from "@/components/CelebrationOverlay";
 import { OnboardingOverlay } from "@/components/onboarding/OnboardingOverlay";
+import { ProfileSettingsModal } from "@/components/ProfileSettingsModal";
+import { useAuth } from "@/components/AuthProvider";
 import { useAudio } from "@/lib/useAudio";
 import { intervalForToken } from "@/lib/reader/timing";
 import { useReaderStore } from "@/lib/stores/readerStore";
@@ -53,12 +55,16 @@ export default function ReaderPage() {
   const [documentId, setDocumentId] = useState<string | null>(null);
   const [rawText, setRawText] = useState("");
 
+  // Auth
+  const { user } = useAuth();
+
   // UI state
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   // Celebration hook
   const { celebration, celebrate, clear: clearCelebration } = useCelebration();
@@ -524,7 +530,9 @@ export default function ReaderPage() {
           break;
         case "Escape":
           e.preventDefault();
-          if (isAnalyticsModalOpen) {
+          if (isProfileModalOpen) {
+            setIsProfileModalOpen(false);
+          } else if (isAnalyticsModalOpen) {
             setIsAnalyticsModalOpen(false);
           } else if (isFeedbackModalOpen) {
             setIsFeedbackModalOpen(false);
@@ -558,15 +566,26 @@ export default function ReaderPage() {
             setWpm((prev) => Math.max(100, prev - 25));
           }
           break;
-        // Track navigation: , for prev, . for next
+        // Track navigation: , for prev, . for next (without modifiers)
         case "Comma":
-          e.preventDefault();
-          audio.prevTrack();
+          if (!e.metaKey && !e.ctrlKey) {
+            e.preventDefault();
+            audio.prevTrack();
+          }
           break;
         case "Period":
           e.preventDefault();
           audio.nextTrack();
           break;
+      }
+
+      // Cmd/Ctrl + , for profile settings
+      if ((e.metaKey || e.ctrlKey) && e.key === ",") {
+        e.preventDefault();
+        if (user) {
+          setIsProfileModalOpen(true);
+        }
+        return;
       }
 
       // Check for ? key (Shift + / or ?)
@@ -593,7 +612,7 @@ export default function ReaderPage() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handlePlayPause, handleBack, handleForward, handleRestart, handleBookmark, handleToggleHighlight, handleModeChange, router, isSidePanelOpen, isLibraryOpen, isShortcutsModalOpen, isFeedbackModalOpen, isAnalyticsModalOpen, onboardingActive, reportOnboardingAction, mode, audio, gradualIncrease, isPlaying]);
+  }, [handlePlayPause, handleBack, handleForward, handleRestart, handleBookmark, handleToggleHighlight, handleModeChange, router, isSidePanelOpen, isLibraryOpen, isShortcutsModalOpen, isFeedbackModalOpen, isAnalyticsModalOpen, isProfileModalOpen, onboardingActive, reportOnboardingAction, mode, audio, gradualIncrease, isPlaying, user]);
 
   // Loading state
   if (!isLoaded) {
@@ -1110,6 +1129,12 @@ export default function ReaderPage() {
       <AnalyticsModal
         isOpen={isAnalyticsModalOpen}
         onClose={() => setIsAnalyticsModalOpen(false)}
+      />
+
+      {/* Profile Settings Modal */}
+      <ProfileSettingsModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
       />
 
       {/* Celebration Overlay */}

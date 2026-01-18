@@ -252,6 +252,7 @@ interface OnboardingState {
 | `L` | Toggle Library |
 | `A` | View Analytics |
 | `F` | Send Feedback |
+| `Cmd/Ctrl + ,` | Profile settings (when signed in) |
 | `?` | Show Keyboard Shortcuts |
 | `Esc` | Close Open Panel |
 
@@ -287,6 +288,7 @@ interface OnboardingState {
 | `H` | Start / End Highlight |
 | `A` | View Analytics |
 | `F` | Send Feedback |
+| `Cmd/Ctrl + ,` | Profile settings (when signed in) |
 | `?` | Show Keyboard Shortcuts |
 | `,` / `.` | Previous / Next Audio Track |
 | `Esc` | Close Open Panel |

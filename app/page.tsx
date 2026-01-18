@@ -12,6 +12,7 @@ import { PasteTextModal } from "@/components/upload/PasteTextModal";
 import { FeedbackModal } from "@/components/FeedbackModal";
 import { AnalyticsModal } from "@/components/AnalyticsModal";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
+import { ProfileSettingsModal } from "@/components/ProfileSettingsModal";
 import { OnboardingOverlay, DEMO_TEXT } from "@/components/onboarding/OnboardingOverlay";
 import { useTheme } from "@/components/ThemeProvider";
 import { useAuth } from "@/components/AuthProvider";
@@ -70,6 +71,7 @@ function HomePageContent() {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   // Mode selection state (after parsing)
   const [parsedContent, setParsedContent] = useState<ParsedContent | null>(null);
@@ -230,8 +232,15 @@ function HomePageContent() {
       } else if (e.key === "?" || (e.shiftKey && e.code === "Slash")) {
         e.preventDefault();
         setShowShortcutsModal(true);
+      } else if ((e.metaKey || e.ctrlKey) && e.key === ",") {
+        e.preventDefault();
+        if (user) {
+          setShowProfileModal(true);
+        }
       } else if (e.key === "Escape") {
-        if (showShortcutsModal) {
+        if (showProfileModal) {
+          setShowProfileModal(false);
+        } else if (showShortcutsModal) {
           setShowShortcutsModal(false);
         } else if (showAnalyticsModal) {
           setShowAnalyticsModal(false);
@@ -247,7 +256,7 @@ function HomePageContent() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isLibraryOpen, setLibraryOpen, showPasteModal, showFeedbackModal, showAnalyticsModal, showShortcutsModal, parsedContent, selectedMode, handleStartReading, handleUploadNew, cycleTheme]);
+  }, [isLibraryOpen, setLibraryOpen, showPasteModal, showFeedbackModal, showAnalyticsModal, showShortcutsModal, showProfileModal, parsedContent, selectedMode, handleStartReading, handleUploadNew, cycleTheme, user]);
 
   // Process file and show mode selection (or navigate directly on mobile)
   const processContent = useCallback(
@@ -1204,6 +1213,12 @@ function HomePageContent() {
         isOpen={showShortcutsModal}
         onClose={() => setShowShortcutsModal(false)}
         page="home"
+      />
+
+      {/* Profile Settings Modal */}
+      <ProfileSettingsModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
       />
 
       {/* Onboarding Overlay */}

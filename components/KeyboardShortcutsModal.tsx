@@ -108,6 +108,7 @@ const allShortcutGroups: ShortcutGroup[] = [
     shortcuts: [
       { keys: ["A"], description: "View analytics" },
       { keys: ["F"], description: "Send feedback" },
+      { keys: ["⌘", ","], description: "Profile settings" },
       { keys: ["?"], description: "Show this help" },
     ],
   },
