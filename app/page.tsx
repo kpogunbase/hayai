@@ -403,12 +403,13 @@ function HomePageContent() {
           style={{
             margin: "0 24px",
             padding: "12px 16px",
-            backgroundColor: "rgba(34, 197, 94, 0.1)",
-            border: "1px solid rgba(34, 197, 94, 0.2)",
+            background: "var(--success-bg)",
+            border: "1px solid var(--success-border)",
             borderRadius: "8px",
-            color: "#22c55e",
+            color: "var(--success)",
             fontSize: "14px",
             textAlign: "center",
+            boxShadow: "var(--success-glow)",
           }}
         >
           Welcome to Hayai Pro! You now have unlimited uploads.

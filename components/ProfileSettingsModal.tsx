@@ -418,12 +418,13 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
                 <div
                   style={{
                     padding: "12px 16px",
-                    backgroundColor: "rgba(34, 197, 94, 0.1)",
-                    border: "1px solid rgba(34, 197, 94, 0.2)",
+                    background: "var(--success-bg)",
+                    border: "1px solid var(--success-border)",
                     borderRadius: "8px",
-                    color: "#22c55e",
+                    color: "var(--success)",
                     fontSize: "14px",
                     marginBottom: "16px",
+                    boxShadow: "var(--success-glow)",
                   }}
                 >
                   {success}

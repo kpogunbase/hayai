@@ -434,12 +434,13 @@ export function FeedbackModal({ isOpen, onClose, page }: FeedbackModalProps) {
             <div
               style={{
                 padding: "12px",
-                backgroundColor: "rgba(34, 197, 94, 0.1)",
-                border: "1px solid rgba(34, 197, 94, 0.3)",
+                background: "var(--success-bg)",
+                border: "1px solid var(--success-border)",
                 borderRadius: "8px",
-                color: "#22c55e",
+                color: "var(--success)",
                 fontSize: "14px",
                 textAlign: "center",
+                boxShadow: "var(--success-glow)",
               }}
             >
               Thank you for your feedback!
