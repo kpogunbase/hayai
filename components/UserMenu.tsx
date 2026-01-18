@@ -84,17 +84,19 @@ export function UserMenu({ onUpgradeClick }: UserMenuProps) {
             fontSize: "14px",
             fontWeight: 500,
             color: "#fff",
-            backgroundColor: "var(--accent)",
+            background: "var(--accent-gradient)",
             border: "none",
             borderRadius: "8px",
             cursor: "pointer",
-            transition: "opacity 0.15s ease",
+            transition: "opacity 0.15s ease, transform 0.15s ease",
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.opacity = "0.9";
+            e.currentTarget.style.transform = "translateY(-1px)";
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.opacity = "1";
+            e.currentTarget.style.transform = "translateY(0)";
           }}
         >
           Sign up free

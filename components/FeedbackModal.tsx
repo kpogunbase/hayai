@@ -515,26 +515,28 @@ export function FeedbackModal({ isOpen, onClose, page }: FeedbackModalProps) {
                 fontSize: "14px",
                 fontWeight: 600,
                 color: "#fff",
-                backgroundColor:
+                background:
                   !feedback.trim() || isSubmitting || submitStatus === "success"
                     ? "var(--text-tertiary)"
-                    : "var(--accent)",
+                    : "var(--accent-gradient)",
                 border: "none",
                 borderRadius: "8px",
                 cursor:
                   !feedback.trim() || isSubmitting || submitStatus === "success"
                     ? "not-allowed"
                     : "pointer",
-                transition: "background-color 150ms ease",
+                transition: "all 150ms ease",
               }}
               onMouseEnter={(e) => {
                 if (feedback.trim() && !isSubmitting && submitStatus !== "success") {
-                  e.currentTarget.style.backgroundColor = "var(--accent-hover)";
+                  e.currentTarget.style.opacity = "0.9";
+                  e.currentTarget.style.transform = "translateY(-1px)";
                 }
               }}
               onMouseLeave={(e) => {
                 if (feedback.trim() && !isSubmitting && submitStatus !== "success") {
-                  e.currentTarget.style.backgroundColor = "var(--accent)";
+                  e.currentTarget.style.opacity = "1";
+                  e.currentTarget.style.transform = "translateY(0)";
                 }
               }}
             >

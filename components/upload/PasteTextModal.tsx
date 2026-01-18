@@ -304,23 +304,25 @@ export function PasteTextModal({
                 fontSize: "14px",
                 fontWeight: 600,
                 color: "#fff",
-                backgroundColor:
+                background:
                   !text.trim() || isLoading
                     ? "var(--text-tertiary)"
-                    : "var(--accent)",
+                    : "var(--accent-gradient)",
                 border: "none",
                 borderRadius: "8px",
                 cursor: !text.trim() || isLoading ? "not-allowed" : "pointer",
-                transition: "background-color 150ms ease",
+                transition: "all 150ms ease",
               }}
               onMouseEnter={(e) => {
                 if (text.trim() && !isLoading) {
-                  e.currentTarget.style.backgroundColor = "var(--accent-hover)";
+                  e.currentTarget.style.opacity = "0.9";
+                  e.currentTarget.style.transform = "translateY(-1px)";
                 }
               }}
               onMouseLeave={(e) => {
                 if (text.trim() && !isLoading) {
-                  e.currentTarget.style.backgroundColor = "var(--accent)";
+                  e.currentTarget.style.opacity = "1";
+                  e.currentTarget.style.transform = "translateY(0)";
                 }
               }}
             >

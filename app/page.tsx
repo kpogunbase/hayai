@@ -451,11 +451,12 @@ function HomePageContent() {
           <div style={{ textAlign: "center", marginBottom: "48px" }}>
             <h1
               style={{
-                fontSize: "42px",
-                fontWeight: 700,
+                fontSize: "38px",
+                fontWeight: 500,
                 marginBottom: "12px",
                 color: "var(--text-primary)",
-                letterSpacing: "-0.02em",
+                letterSpacing: "0.25em",
+                textTransform: "uppercase",
               }}
             >
               Hayai

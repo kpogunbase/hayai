@@ -36,7 +36,7 @@ function IconButton({
         fontSize: "14px",
         border: primary ? "none" : "1px solid var(--border)",
         borderRadius: "50%",
-        backgroundColor: primary ? "var(--accent)" : "var(--bg-secondary)",
+        background: primary ? "var(--accent-gradient)" : "var(--bg-secondary)",
         color: primary ? "#fff" : "var(--text-secondary)",
         cursor: "pointer",
         transition: "all 0.15s ease",
@@ -44,19 +44,19 @@ function IconButton({
       }}
       onMouseEnter={(e) => {
         if (primary) {
-          e.currentTarget.style.backgroundColor = "var(--accent-hover)";
+          e.currentTarget.style.opacity = "0.9";
           e.currentTarget.style.transform = "scale(1.05)";
         } else {
-          e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
+          e.currentTarget.style.background = "var(--bg-tertiary)";
           e.currentTarget.style.borderColor = "var(--border-strong)";
         }
       }}
       onMouseLeave={(e) => {
         if (primary) {
-          e.currentTarget.style.backgroundColor = "var(--accent)";
+          e.currentTarget.style.opacity = "1";
           e.currentTarget.style.transform = "scale(1)";
         } else {
-          e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
+          e.currentTarget.style.background = "var(--bg-secondary)";
           e.currentTarget.style.borderColor = "var(--border)";
         }
       }}
@@ -130,7 +130,7 @@ export function ReaderControls({
             style={{
               width: `${progress}%`,
               height: "100%",
-              backgroundColor: "var(--accent)",
+              background: "var(--accent-gradient)",
               borderRadius: "3px",
               transition: "width 0.15s ease-out",
             }}
