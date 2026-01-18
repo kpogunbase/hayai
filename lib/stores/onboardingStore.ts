@@ -191,10 +191,10 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
         celebrationMessage: messages[action],
       });
 
-      // Auto-advance after celebration
+      // Auto-advance after celebration (longer delay for better readability)
       setTimeout(() => {
         get().nextStep();
-      }, 1200);
+      }, 2200);
     }
   },
 
