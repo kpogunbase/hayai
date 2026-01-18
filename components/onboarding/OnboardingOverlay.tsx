@@ -124,11 +124,21 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
     }
   }, [isActive]);
 
-  // Delay tooltip visibility to prevent flash when position changes
+  // Delay tooltip visibility to prevent flash when position/state changes
   useEffect(() => {
     setIsTooltipReady(false);
-    const timer = setTimeout(() => setIsTooltipReady(true), 100);
-    return () => clearTimeout(timer);
+    // Use requestAnimationFrame + setTimeout for smoother transition
+    let frameId: number;
+    let timerId: NodeJS.Timeout;
+
+    frameId = requestAnimationFrame(() => {
+      timerId = setTimeout(() => setIsTooltipReady(true), 150);
+    });
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      clearTimeout(timerId);
+    };
   }, [currentStep, showStepCelebration]);
 
   // Update target rect when step changes
@@ -623,6 +633,7 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
       {/* Tooltip for targeted steps */}
       {!isFullScreen && isTooltipReady && (
         <OnboardingTooltip
+          key={`${currentStep}-${showStepCelebration}`}
           title={config.title}
           description={isMobile && config.mobileDescription ? config.mobileDescription : config.description}
           keyboardHint={isMobile ? undefined : config.keyboardHint}

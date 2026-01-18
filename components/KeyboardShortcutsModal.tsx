@@ -1,19 +1,23 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useMemo } from "react";
 import { useIsMobile } from "@/lib/hooks/useIsMobile";
+
+type PageContext = "home" | "reader";
 
 interface KeyboardShortcutsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  page?: PageContext;
 }
 
 interface ShortcutGroup {
   title: string;
   shortcuts: { keys: string[]; description: string }[];
+  pages?: PageContext[]; // If undefined, shows on all pages
 }
 
-const shortcutGroups: ShortcutGroup[] = [
+const allShortcutGroups: ShortcutGroup[] = [
   {
     title: "Home Page",
     shortcuts: [
@@ -21,7 +25,9 @@ const shortcutGroups: ShortcutGroup[] = [
       { keys: ["1", "2"], description: "Select input method" },
       { keys: ["⇧", "U"], description: "Upload file" },
       { keys: ["⇧", "P"], description: "Paste text" },
+      { keys: ["T"], description: "Cycle theme" },
     ],
+    pages: ["home"],
   },
   {
     title: "Mode Selection",
@@ -31,6 +37,7 @@ const shortcutGroups: ShortcutGroup[] = [
       { keys: ["Enter"], description: "Start reading" },
       { keys: ["N"], description: "Upload new file" },
     ],
+    pages: ["home"],
   },
   {
     title: "Playback",
@@ -39,10 +46,12 @@ const shortcutGroups: ShortcutGroup[] = [
       { keys: ["←"], description: "Back 10 words" },
       { keys: ["→"], description: "Forward 10 words" },
       { keys: ["R"], description: "Restart from beginning" },
+      { keys: ["M"], description: "Switch reading mode" },
       { keys: ["G"], description: "Toggle gradual increase" },
       { keys: ["+"], description: "Increase WPM (+25)" },
       { keys: ["-"], description: "Decrease WPM (-25)" },
     ],
+    pages: ["reader"],
   },
   {
     title: "Audio",
@@ -50,14 +59,28 @@ const shortcutGroups: ShortcutGroup[] = [
       { keys: [","], description: "Previous track" },
       { keys: ["."], description: "Next track" },
     ],
+    pages: ["reader"],
+  },
+  {
+    title: "Panels & Navigation",
+    shortcuts: [
+      { keys: ["L"], description: "Toggle library" },
+      { keys: ["↑", "↓"], description: "Navigate library items" },
+      { keys: ["Enter"], description: "Open selected document" },
+      { keys: ["Esc"], description: "Close open panel" },
+    ],
+    pages: ["home"],
   },
   {
     title: "Panels",
     shortcuts: [
       { keys: ["S"], description: "Toggle side panel" },
       { keys: ["L"], description: "Toggle library" },
+      { keys: ["↑", "↓"], description: "Navigate library items" },
+      { keys: ["Enter"], description: "Open selected document" },
       { keys: ["Esc"], description: "Close open panel" },
     ],
+    pages: ["reader"],
   },
   {
     title: "Annotations",
@@ -65,6 +88,7 @@ const shortcutGroups: ShortcutGroup[] = [
       { keys: ["B"], description: "Add bookmark" },
       { keys: ["H"], description: "Start / end highlight" },
     ],
+    pages: ["reader"],
   },
   {
     title: "Other",
@@ -79,8 +103,16 @@ const shortcutGroups: ShortcutGroup[] = [
 export function KeyboardShortcutsModal({
   isOpen,
   onClose,
+  page = "reader",
 }: KeyboardShortcutsModalProps) {
   const isMobile = useIsMobile();
+
+  // Filter shortcuts based on page context
+  const shortcutGroups = useMemo(() => {
+    return allShortcutGroups.filter(
+      (group) => !group.pages || group.pages.includes(page)
+    );
+  }, [page]);
 
   // Close on escape
   const handleKeyDown = useCallback(

@@ -6,9 +6,10 @@ import type { Document } from "@/types/document";
 interface LibraryDocumentCardProps {
   document: Document;
   onClick: () => void;
+  isSelected?: boolean;
 }
 
-export function LibraryDocumentCard({ document, onClick }: LibraryDocumentCardProps) {
+export function LibraryDocumentCard({ document, onClick, isSelected = false }: LibraryDocumentCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   // Format date for display
@@ -66,12 +67,22 @@ export function LibraryDocumentCard({ document, onClick }: LibraryDocumentCardPr
         width: "100%",
         padding: "12px",
         borderRadius: "8px",
-        border: "1px solid var(--border)",
-        backgroundColor: isHovered ? "var(--bg-secondary)" : "var(--bg-primary)",
+        border: isSelected ? "1px solid var(--accent)" : "1px solid var(--border)",
+        backgroundColor: isSelected
+          ? "var(--highlight-active)"
+          : isHovered
+          ? "var(--bg-secondary)"
+          : "var(--bg-primary)",
         cursor: "pointer",
         textAlign: "left",
         transition: "background-color 150ms ease, border-color 150ms ease",
-        borderColor: isHovered ? "var(--border-strong)" : "var(--border)",
+        borderColor: isSelected
+          ? "var(--accent)"
+          : isHovered
+          ? "var(--border-strong)"
+          : "var(--border)",
+        outline: isSelected ? "2px solid var(--accent)" : "none",
+        outlineOffset: "-2px",
       }}
     >
       {/* Title row */}

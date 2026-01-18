@@ -11,7 +11,9 @@ import { LibraryPanel } from "@/components/library/LibraryPanel";
 import { PasteTextModal } from "@/components/upload/PasteTextModal";
 import { FeedbackModal } from "@/components/FeedbackModal";
 import { AnalyticsModal } from "@/components/AnalyticsModal";
+import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import { OnboardingOverlay, DEMO_TEXT } from "@/components/onboarding/OnboardingOverlay";
+import { useTheme } from "@/components/ThemeProvider";
 import { useAuth } from "@/components/AuthProvider";
 import { useIsMobile } from "@/lib/hooks/useIsMobile";
 import { parseFile } from "@/lib/parse";
@@ -46,6 +48,18 @@ function HomePageContent() {
   const searchParams = useSearchParams();
   const { user, subscription, isLoading: authLoading } = useAuth();
   const isMobile = useIsMobile();
+  const { theme, setTheme } = useTheme();
+
+  // Theme cycling function
+  const cycleTheme = useCallback(() => {
+    if (theme === "system") {
+      setTheme("light");
+    } else if (theme === "light") {
+      setTheme("dark");
+    } else {
+      setTheme("system");
+    }
+  }, [theme, setTheme]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +69,7 @@ function HomePageContent() {
   const [showPasteModal, setShowPasteModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
 
   // Mode selection state (after parsing)
   const [parsedContent, setParsedContent] = useState<ParsedContent | null>(null);
@@ -209,8 +224,16 @@ function HomePageContent() {
       } else if (e.key.toLowerCase() === "a") {
         e.preventDefault();
         setShowAnalyticsModal(true);
+      } else if (e.key.toLowerCase() === "t" && !e.shiftKey) {
+        e.preventDefault();
+        cycleTheme();
+      } else if (e.key === "?" || (e.shiftKey && e.code === "Slash")) {
+        e.preventDefault();
+        setShowShortcutsModal(true);
       } else if (e.key === "Escape") {
-        if (showAnalyticsModal) {
+        if (showShortcutsModal) {
+          setShowShortcutsModal(false);
+        } else if (showAnalyticsModal) {
           setShowAnalyticsModal(false);
         } else if (showFeedbackModal) {
           setShowFeedbackModal(false);
@@ -224,7 +247,7 @@ function HomePageContent() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isLibraryOpen, setLibraryOpen, showPasteModal, showFeedbackModal, showAnalyticsModal, parsedContent, selectedMode, handleStartReading, handleUploadNew]);
+  }, [isLibraryOpen, setLibraryOpen, showPasteModal, showFeedbackModal, showAnalyticsModal, showShortcutsModal, parsedContent, selectedMode, handleStartReading, handleUploadNew, cycleTheme]);
 
   // Process file and show mode selection (or navigate directly on mobile)
   const processContent = useCallback(
@@ -1137,7 +1160,7 @@ function HomePageContent() {
                     textAlign: "center",
                   }}
                 >
-                  <kbd style={kbdStyle}>Tab</kbd> Switch input <kbd style={kbdStyle}>Shift+U</kbd> Upload <kbd style={kbdStyle}>Shift+P</kbd> Paste
+                  <kbd style={kbdStyle}>Tab</kbd> Switch <kbd style={kbdStyle}>Shift+U</kbd> Upload <kbd style={kbdStyle}>T</kbd> Theme <kbd style={kbdStyle}>?</kbd> Help
                 </p>
               )}
             </>
@@ -1174,6 +1197,13 @@ function HomePageContent() {
       <AnalyticsModal
         isOpen={showAnalyticsModal}
         onClose={() => setShowAnalyticsModal(false)}
+      />
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal
+        isOpen={showShortcutsModal}
+        onClose={() => setShowShortcutsModal(false)}
+        page="home"
       />
 
       {/* Onboarding Overlay */}

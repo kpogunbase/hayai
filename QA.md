@@ -299,9 +299,12 @@ Run each check for at least 60–120 seconds to catch drift.
 | `2` | Select Paste tab | [ ] |
 | `Shift+U` | Trigger file upload dialog | [ ] |
 | `Shift+P` | Open paste text modal | [ ] |
+| `T` | Cycle theme (System → Light → Dark) | [ ] |
 | `L` | Toggle Library | [ ] |
 | `A` | View Analytics | [ ] |
 | `F` | Send Feedback | [ ] |
+| `?` | Show Keyboard Shortcuts | [ ] |
+| `Esc` | Close open panel | [ ] |
 
 ### 16.2 Mode Selection Shortcuts (after upload)
 
@@ -321,6 +324,7 @@ Run each check for at least 60–120 seconds to catch drift.
 | `←` | Back 10 words | [ ] |
 | `→` | Forward 10 words | [ ] |
 | `R` | Restart | [ ] |
+| `M` | Switch reading mode | [ ] |
 | `G` | Toggle Gradual Increase | [ ] |
 | `+` / `=` | Increase WPM | [ ] |
 | `-` | Decrease WPM | [ ] |
@@ -335,12 +339,23 @@ Run each check for at least 60–120 seconds to catch drift.
 | `.` | Next Audio Track | [ ] |
 | `Esc` | Close Open Panel | [ ] |
 
-### 16.4 Shortcut Edge Cases
+### 16.4 Library Navigation Shortcuts
+
+| Key | Expected Action | Works? |
+|-----|-----------------|--------|
+| `↑` | Select previous item | [ ] |
+| `↓` | Select next item | [ ] |
+| `Enter` | Open selected document | [ ] |
+| `Esc` | Close library | [ ] |
+
+### 16.5 Shortcut Edge Cases
 - [ ] Shortcuts don't trigger when typing in input/textarea
 - [ ] Multiple panels don't open simultaneously
 - [ ] `Esc` closes most recently opened panel first
 - [ ] Mode selection shortcuts only work after file is parsed
 - [ ] Home page tab shortcuts don't interfere with mode selection
+- [ ] Library navigation works with keyboard focus
+- [ ] `?` opens shortcuts modal on both home and reader pages
 
 ---
 

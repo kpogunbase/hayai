@@ -22,6 +22,7 @@ export function LibraryPanel({ isOpen, onClose, onDocumentSelect }: LibraryPanel
   const [isLoading, setIsLoading] = useState(false);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
   // Fetch documents when panel opens
   const fetchDocuments = useCallback(async () => {
@@ -64,17 +65,53 @@ export function LibraryPanel({ isOpen, onClose, onDocumentSelect }: LibraryPanel
     [onDocumentSelect]
   );
 
-  // Handle escape key
+  // Reset selected index when search changes
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [searchQuery]);
+
+  // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        onClose();
+      if (!isOpen) return;
+
+      // Don't handle if typing in search
+      if (e.target instanceof HTMLInputElement) {
+        // Only handle escape in search input
+        if (e.key === "Escape") {
+          e.preventDefault();
+          onClose();
+        }
+        return;
+      }
+
+      switch (e.key) {
+        case "Escape":
+          e.preventDefault();
+          onClose();
+          break;
+        case "ArrowDown":
+          e.preventDefault();
+          setSelectedIndex((prev) =>
+            Math.min(prev + 1, filteredDocuments.length - 1)
+          );
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setSelectedIndex((prev) => Math.max(prev - 1, 0));
+          break;
+        case "Enter":
+          e.preventDefault();
+          if (filteredDocuments.length > 0 && filteredDocuments[selectedIndex]) {
+            handleSelectDocument(filteredDocuments[selectedIndex]);
+          }
+          break;
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, filteredDocuments, selectedIndex, handleSelectDocument]);
 
   return (
     <>
@@ -187,11 +224,12 @@ export function LibraryPanel({ isOpen, onClose, onDocumentSelect }: LibraryPanel
             <LibraryEmptyState hasSearchQuery={searchQuery.length > 0} />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {filteredDocuments.map((doc) => (
+              {filteredDocuments.map((doc, index) => (
                 <LibraryDocumentCard
                   key={doc.id}
                   document={doc}
                   onClick={() => handleSelectDocument(doc)}
+                  isSelected={index === selectedIndex}
                 />
               ))}
             </div>
@@ -209,7 +247,7 @@ export function LibraryPanel({ isOpen, onClose, onDocumentSelect }: LibraryPanel
               textAlign: "center",
             }}
           >
-            Press <kbd style={kbdStyle}>L</kbd> or <kbd style={kbdStyle}>Esc</kbd> to close
+            <kbd style={kbdStyle}>↑</kbd><kbd style={kbdStyle}>↓</kbd> Navigate <kbd style={kbdStyle}>Enter</kbd> Open <kbd style={kbdStyle}>Esc</kbd> Close
           </div>
         )}
       </div>

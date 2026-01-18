@@ -508,6 +508,13 @@ export default function ReaderPage() {
             setGradualIncrease((prev) => !prev);
           }
           break;
+        case "KeyM":
+          e.preventDefault();
+          if (!isPlaying) {
+            const newMode = mode === "reading" ? "challenge" : "reading";
+            handleModeChange(newMode);
+          }
+          break;
         case "Escape":
           e.preventDefault();
           if (isAnalyticsModalOpen) {
@@ -579,7 +586,7 @@ export default function ReaderPage() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handlePlayPause, handleBack, handleForward, handleRestart, handleBookmark, handleToggleHighlight, isSidePanelOpen, isLibraryOpen, isShortcutsModalOpen, isFeedbackModalOpen, isAnalyticsModalOpen, onboardingActive, reportOnboardingAction, mode, audio, gradualIncrease]);
+  }, [handlePlayPause, handleBack, handleForward, handleRestart, handleBookmark, handleToggleHighlight, handleModeChange, isSidePanelOpen, isLibraryOpen, isShortcutsModalOpen, isFeedbackModalOpen, isAnalyticsModalOpen, onboardingActive, reportOnboardingAction, mode, audio, gradualIncrease]);
 
   // Loading state
   if (!isLoaded) {
@@ -1082,6 +1089,7 @@ export default function ReaderPage() {
       <KeyboardShortcutsModal
         isOpen={isShortcutsModalOpen}
         onClose={() => setIsShortcutsModalOpen(false)}
+        page="reader"
       />
 
       {/* Feedback Modal */}

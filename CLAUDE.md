@@ -248,6 +248,12 @@ interface OnboardingState {
 | `1` / `2` | Select input method |
 | `Shift+U` | Upload file |
 | `Shift+P` | Paste text |
+| `T` | Cycle theme (System → Light → Dark) |
+| `L` | Toggle Library |
+| `A` | View Analytics |
+| `F` | Send Feedback |
+| `?` | Show Keyboard Shortcuts |
+| `Esc` | Close Open Panel |
 
 ### Mode Selection (after upload)
 | Key | Action |
@@ -257,6 +263,13 @@ interface OnboardingState {
 | `Enter` | Start Reading |
 | `N` | Upload New File |
 
+### Library Navigation
+| Key | Action |
+|-----|--------|
+| `↑` / `↓` | Navigate items |
+| `Enter` | Open selected document |
+| `Esc` | Close library |
+
 ### Reader Page
 | Key | Action |
 |-----|--------|
@@ -264,6 +277,7 @@ interface OnboardingState {
 | `←` | Back 10 words |
 | `→` | Forward 10 words |
 | `R` | Restart from beginning |
+| `M` | Switch reading mode |
 | `G` | Toggle Gradual Increase |
 | `+` / `-` | Increase / Decrease WPM |
 | `S` | Toggle Side Panel |

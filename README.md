@@ -49,6 +49,12 @@ Hayai is a modern speed reading web application that uses RSVP (Rapid Serial Vis
 | `1` / `2` | Select input method |
 | `Shift+U` | Upload file |
 | `Shift+P` | Paste text |
+| `T` | Cycle theme (System → Light → Dark) |
+| `L` | Toggle Library |
+| `A` | View Analytics |
+| `F` | Send Feedback |
+| `?` | Show Keyboard Shortcuts |
+| `Esc` | Close Open Panel |
 
 ### Mode Selection (after upload)
 | Key | Action |
@@ -58,6 +64,13 @@ Hayai is a modern speed reading web application that uses RSVP (Rapid Serial Vis
 | `Enter` | Start Reading |
 | `N` | Upload New File |
 
+### Library Navigation
+| Key | Action |
+|-----|--------|
+| `↑` / `↓` | Navigate items |
+| `Enter` | Open selected document |
+| `Esc` | Close library |
+
 ### Reader Page
 | Key | Action |
 |-----|--------|
@@ -65,6 +78,7 @@ Hayai is a modern speed reading web application that uses RSVP (Rapid Serial Vis
 | `←` | Back 10 words |
 | `→` | Forward 10 words |
 | `R` | Restart from beginning |
+| `M` | Switch reading mode |
 | `G` | Toggle Gradual Increase |
 | `+` / `-` | Increase / Decrease WPM |
 | `S` | Toggle Side Panel |
