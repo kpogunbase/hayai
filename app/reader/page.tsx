@@ -40,6 +40,7 @@ export default function ReaderPage() {
   const libraryStore = useLibraryStore();
   const statsStore = useStatsStore();
   const onboardingActive = useOnboardingStore((s) => s.isActive);
+  const hasCompletedOnboarding = useOnboardingStore((s) => s.hasCompletedOnboarding);
   const reportOnboardingAction = useOnboardingStore((s) => s.reportAction);
   const isMobile = useIsMobile();
 
@@ -169,6 +170,27 @@ export default function ReaderPage() {
       sessionStorage.removeItem("hayai_mode");
     }
   }, []);
+
+  // Track previous onboarding state to detect when it completes
+  const wasOnboardingActiveRef = useRef(onboardingActive);
+
+  // Restart reader when onboarding completes
+  useEffect(() => {
+    // Detect transition from active to inactive (onboarding just completed)
+    if (wasOnboardingActiveRef.current && !onboardingActive && hasCompletedOnboarding) {
+      // Restart from beginning but keep audio playing
+      setIndex(0);
+      setChallengeStartTime(null);
+      setCurrentChallengeWpm(DEFAULT_CHALLENGE_CONFIG.startWpm);
+      setCurrentGradualStage(0);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      setIsPlaying(false);
+    }
+    wasOnboardingActiveRef.current = onboardingActive;
+  }, [onboardingActive, hasCompletedOnboarding]);
 
   // Helper to calculate gradual increase stage based on progress
   const getGradualStageAndWpm = useCallback((currentIndex: number, totalTokens: number): { stage: number; wpm: number } => {
@@ -537,8 +559,18 @@ export default function ReaderPage() {
       if (e.key === "?" || (e.shiftKey && e.code === "Slash")) {
         e.preventDefault();
         // Pause reading when opening shortcuts modal
+        // During onboarding, keep audio playing but pause the reader
         if (isPlayingRef.current) {
-          handlePlayPause();
+          if (onboardingActive) {
+            // Just pause the reader, keep audio playing
+            if (timeoutRef.current) {
+              clearTimeout(timeoutRef.current);
+              timeoutRef.current = null;
+            }
+            setIsPlaying(false);
+          } else {
+            handlePlayPause();
+          }
         }
         setIsShortcutsModalOpen(true);
         if (onboardingActive) reportOnboardingAction("help");

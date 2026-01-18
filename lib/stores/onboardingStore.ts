@@ -28,7 +28,7 @@ const STEP_ACTIONS: Record<OnboardingStep, OnboardingAction | null> = {
   upload: 'upload',
   play: 'space',
   navigate: 'arrow',
-  speed: 'wpm',
+  speed: null, // Manual advance only (button click or Enter key)
   shortcuts: 'help',
   complete: null, // Final step
 };
@@ -171,8 +171,11 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
 
   // Report user action (for interactive steps)
   reportAction: (action) => {
-    const { currentStep, isActive } = get();
+    const { currentStep, isActive, showStepCelebration } = get();
     if (!isActive) return;
+
+    // Prevent multiple triggers - if already celebrating, ignore new actions
+    if (showStepCelebration) return;
 
     const requiredAction = STEP_ACTIONS[currentStep];
 
