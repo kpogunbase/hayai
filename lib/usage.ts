@@ -4,8 +4,8 @@ const STORAGE_KEY = "hayai_usage_count";
 
 // Usage limits by tier
 export const LIMITS = {
-  anonymous: 3,        // 3 uploads for visitors (localStorage)
-  free: 10,            // 10 uploads for free accounts
+  anonymous: 10,       // 10 uploads for visitors (localStorage)
+  free: 25,            // 25 uploads for free accounts
   monthly: 50,         // 50 uploads per month for monthly subscribers
   yearly: Infinity,    // Unlimited for annual subscribers
 } as const;

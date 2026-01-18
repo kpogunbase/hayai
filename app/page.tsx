@@ -145,23 +145,23 @@ function HomePageContent() {
 
   const handleFileSelected = useCallback(
     async (file: File) => {
-      // Check usage limits before processing
-      if (user) {
-        const exceeded = await hasExceededDbLimit(
-          user.id,
-          subscription?.plan ?? null,
-          subscription?.currentPeriodEnd ?? null
-        );
-        if (exceeded) {
-          setShowPaywall(true);
-          return;
-        }
-      } else {
-        if (hasExceededLocalLimit()) {
-          setShowPaywall(true);
-          return;
-        }
-      }
+      // DISABLED: Usage limits and paywall - uncomment to re-enable
+      // if (user) {
+      //   const exceeded = await hasExceededDbLimit(
+      //     user.id,
+      //     subscription?.plan ?? null,
+      //     subscription?.currentPeriodEnd ?? null
+      //   );
+      //   if (exceeded) {
+      //     setShowPaywall(true);
+      //     return;
+      //   }
+      // } else {
+      //   if (hasExceededLocalLimit()) {
+      //     setShowPaywall(true);
+      //     return;
+      //   }
+      // }
 
       setIsLoading(true);
       setError(null);
@@ -169,12 +169,12 @@ function HomePageContent() {
       try {
         const text = await parseFile(file);
 
-        // Increment usage
-        if (user) {
-          await incrementDbUsage(user.id);
-        } else {
-          incrementLocalUsage();
-        }
+        // DISABLED: Usage tracking - uncomment to re-enable
+        // if (user) {
+        //   await incrementDbUsage(user.id);
+        // } else {
+        //   incrementLocalUsage();
+        // }
 
         // Get file type from extension
         const ext = file.name.split(".").pop()?.toLowerCase() || "txt";
@@ -192,36 +192,36 @@ function HomePageContent() {
 
   const handlePasteSubmit = useCallback(
     async (text: string, title: string) => {
-      // Check usage limits
-      if (user) {
-        const exceeded = await hasExceededDbLimit(
-          user.id,
-          subscription?.plan ?? null,
-          subscription?.currentPeriodEnd ?? null
-        );
-        if (exceeded) {
-          setShowPasteModal(false);
-          setShowPaywall(true);
-          return;
-        }
-      } else {
-        if (hasExceededLocalLimit()) {
-          setShowPasteModal(false);
-          setShowPaywall(true);
-          return;
-        }
-      }
+      // DISABLED: Usage limits and paywall - uncomment to re-enable
+      // if (user) {
+      //   const exceeded = await hasExceededDbLimit(
+      //     user.id,
+      //     subscription?.plan ?? null,
+      //     subscription?.currentPeriodEnd ?? null
+      //   );
+      //   if (exceeded) {
+      //     setShowPasteModal(false);
+      //     setShowPaywall(true);
+      //     return;
+      //   }
+      // } else {
+      //   if (hasExceededLocalLimit()) {
+      //     setShowPasteModal(false);
+      //     setShowPaywall(true);
+      //     return;
+      //   }
+      // }
 
       setIsLoading(true);
       setShowPasteModal(false);
 
       try {
-        // Increment usage
-        if (user) {
-          await incrementDbUsage(user.id);
-        } else {
-          incrementLocalUsage();
-        }
+        // DISABLED: Usage tracking - uncomment to re-enable
+        // if (user) {
+        //   await incrementDbUsage(user.id);
+        // } else {
+        //   incrementLocalUsage();
+        // }
 
         await processAndNavigate(text, title, "paste");
       } catch (err) {
@@ -393,7 +393,8 @@ function HomePageContent() {
             Feedback
           </button>
         </div>
-        <UserMenu onUpgradeClick={() => setShowPaywall(true)} />
+        {/* DISABLED: onUpgradeClick prop removed to hide upgrade option */}
+        <UserMenu />
       </header>
 
       {/* Success message */}
@@ -653,7 +654,7 @@ function HomePageContent() {
             </div>
           )}
 
-          {/* Usage info */}
+          {/* DISABLED: Usage info and upgrade button - uncomment to re-enable
           <div
             style={{
               display: "flex",
@@ -712,6 +713,7 @@ function HomePageContent() {
               </button>
             )}
           </div>
+          */}
 
           {/* Footer hint */}
           <p

@@ -151,6 +151,7 @@ export function UserMenu({ onUpgradeClick }: UserMenuProps) {
         >
           {!avatarUrl && initial}
         </div>
+        {/* DISABLED: Pro badge - uncomment to re-enable
         {isSubscribed && (
           <span
             style={{
@@ -163,6 +164,7 @@ export function UserMenu({ onUpgradeClick }: UserMenuProps) {
             Pro
           </span>
         )}
+        */}
       </button>
 
       {isOpen && (
@@ -233,6 +235,7 @@ export function UserMenu({ onUpgradeClick }: UserMenuProps) {
                 >
                   {profile?.username || user.email?.split("@")[0]}
                 </p>
+                {/* DISABLED: Plan status display - uncomment to re-enable
                 <p
                   style={{
                     fontSize: "12px",
@@ -244,6 +247,7 @@ export function UserMenu({ onUpgradeClick }: UserMenuProps) {
                     ? `${subscription.plan === "yearly" ? "Yearly" : "Monthly"} Pro`
                     : "Free Plan"}
                 </p>
+                */}
               </div>
             </div>
 
@@ -282,6 +286,7 @@ export function UserMenu({ onUpgradeClick }: UserMenuProps) {
               Profile Settings
             </button>
 
+            {/* DISABLED: Upgrade and subscription management - uncomment to re-enable
             {!isSubscribed && onUpgradeClick && (
               <button
                 onClick={() => {
@@ -359,6 +364,7 @@ export function UserMenu({ onUpgradeClick }: UserMenuProps) {
                 Manage Subscription
               </button>
             )}
+            */}
 
             <button
               onClick={() => {
