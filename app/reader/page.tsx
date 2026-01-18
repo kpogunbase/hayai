@@ -463,6 +463,12 @@ export default function ReaderPage() {
           e.preventDefault();
           setIsFeedbackModalOpen(true);
           break;
+        case "KeyG":
+          e.preventDefault();
+          if (mode === "reading" && !isPlaying) {
+            setGradualIncrease((prev) => !prev);
+          }
+          break;
         case "Escape":
           e.preventDefault();
           if (isFeedbackModalOpen) {
@@ -942,10 +948,10 @@ export default function ReaderPage() {
             <span><kbd style={kbdStyle}>Space</kbd> Play/Pause</span>
             <span><kbd style={kbdStyle}>←</kbd><kbd style={kbdStyle}>→</kbd> Skip</span>
             <span><kbd style={kbdStyle}>R</kbd> Restart</span>
+            <span><kbd style={kbdStyle}>G</kbd> Gradual</span>
             <span><kbd style={kbdStyle}>S</kbd> Side Panel</span>
             <span><kbd style={kbdStyle}>B</kbd> Bookmark</span>
             <span><kbd style={kbdStyle}>H</kbd> Highlight</span>
-            <span><kbd style={kbdStyle}>F</kbd> Feedback</span>
             <span><kbd style={kbdStyle}>?</kbd> Help</span>
           </div>
         )}

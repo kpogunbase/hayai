@@ -20,6 +20,7 @@ const shortcutGroups: ShortcutGroup[] = [
       { keys: ["←"], description: "Back 10 words" },
       { keys: ["→"], description: "Forward 10 words" },
       { keys: ["R"], description: "Restart from beginning" },
+      { keys: ["G"], description: "Toggle gradual increase" },
       { keys: ["+"], description: "Increase WPM (+25)" },
       { keys: ["-"], description: "Decrease WPM (-25)" },
     ],
