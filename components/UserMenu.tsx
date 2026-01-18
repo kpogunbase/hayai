@@ -151,8 +151,8 @@ export function UserMenu({ onUpgradeClick }: UserMenuProps) {
         >
           {!avatarUrl && initial}
         </div>
-        {/* DISABLED: Pro badge - uncomment to re-enable
-        {isSubscribed && (
+        {/* DISABLED: Pro badge - set to true to re-enable */}
+        {false && isSubscribed && (
           <span
             style={{
               fontSize: "11px",
@@ -164,7 +164,6 @@ export function UserMenu({ onUpgradeClick }: UserMenuProps) {
             Pro
           </span>
         )}
-        */}
       </button>
 
       {isOpen && (
@@ -235,7 +234,8 @@ export function UserMenu({ onUpgradeClick }: UserMenuProps) {
                 >
                   {profile?.username || user.email?.split("@")[0]}
                 </p>
-                {/* DISABLED: Plan status display - uncomment to re-enable
+                {/* DISABLED: Plan status display - set to true to re-enable */}
+                {false && (
                 <p
                   style={{
                     fontSize: "12px",
@@ -244,10 +244,10 @@ export function UserMenu({ onUpgradeClick }: UserMenuProps) {
                   }}
                 >
                   {isSubscribed
-                    ? `${subscription.plan === "yearly" ? "Yearly" : "Monthly"} Pro`
+                    ? `${subscription?.plan === "yearly" ? "Yearly" : "Monthly"} Pro`
                     : "Free Plan"}
                 </p>
-                */}
+                )}
               </div>
             </div>
 
@@ -286,12 +286,12 @@ export function UserMenu({ onUpgradeClick }: UserMenuProps) {
               Profile Settings
             </button>
 
-            {/* DISABLED: Upgrade and subscription management - uncomment to re-enable
-            {!isSubscribed && onUpgradeClick && (
+            {/* DISABLED: Upgrade and subscription management - set to true to re-enable */}
+            {false && !isSubscribed && onUpgradeClick && (
               <button
                 onClick={() => {
                   setIsOpen(false);
-                  onUpgradeClick();
+                  onUpgradeClick?.();
                 }}
                 style={{
                   width: "100%",
@@ -323,7 +323,8 @@ export function UserMenu({ onUpgradeClick }: UserMenuProps) {
               </button>
             )}
 
-            {isSubscribed && (
+            {/* DISABLED: Manage subscription - set to true to re-enable */}
+            {false && isSubscribed && (
               <button
                 onClick={async () => {
                   setIsOpen(false);
@@ -364,7 +365,6 @@ export function UserMenu({ onUpgradeClick }: UserMenuProps) {
                 Manage Subscription
               </button>
             )}
-            */}
 
             <button
               onClick={() => {

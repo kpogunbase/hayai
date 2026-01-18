@@ -654,7 +654,8 @@ function HomePageContent() {
             </div>
           )}
 
-          {/* DISABLED: Usage info and upgrade button - uncomment to re-enable
+          {/* DISABLED: Usage info and upgrade button - set to true to re-enable */}
+          {false && (
           <div
             style={{
               display: "flex",
@@ -713,7 +714,7 @@ function HomePageContent() {
               </button>
             )}
           </div>
-          */}
+          )}
 
           {/* Footer hint */}
           <p
