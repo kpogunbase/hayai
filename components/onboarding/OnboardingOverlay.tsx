@@ -291,18 +291,48 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
             padding: "24px",
           }}
         >
+          {/* Celebration particles for complete step */}
+          {currentStep === "complete" && (
+            <>
+              {[...Array(12)].map((_, i) => (
+                <div
+                  key={i}
+                  style={{
+                    position: "absolute",
+                    width: "8px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    background: i % 3 === 0
+                      ? "var(--accent)"
+                      : i % 3 === 1
+                        ? "#10b981"
+                        : "#f59e0b",
+                    animation: `celebrationParticle${i % 4} 2s ease-out infinite`,
+                    animationDelay: `${i * 0.15}s`,
+                    opacity: 0,
+                  }}
+                />
+              ))}
+            </>
+          )}
+
           {/* Logo/Icon */}
           <div
             style={{
               width: isMobile ? "64px" : "80px",
               height: isMobile ? "64px" : "80px",
               borderRadius: isMobile ? "16px" : "20px",
-              background: "var(--accent-gradient)",
+              background: currentStep === "complete"
+                ? "linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%)"
+                : "var(--accent-gradient)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               marginBottom: isMobile ? "24px" : "32px",
-              boxShadow: "0 0 60px var(--accent)",
+              boxShadow: currentStep === "complete"
+                ? "0 0 60px rgba(16, 185, 129, 0.6), 0 0 120px rgba(16, 185, 129, 0.3)"
+                : "0 0 60px var(--accent)",
+              animation: currentStep === "complete" ? "celebrationBounce 0.6s ease-out, celebrationPulse 2s ease-in-out infinite 0.6s" : "none",
             }}
           >
             {currentStep === "complete" ? (
@@ -315,6 +345,9 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                style={{
+                  animation: "celebrationCheck 0.4s ease-out 0.3s both",
+                }}
               >
                 <polyline points="20 6 9 17 4 12" />
               </svg>
@@ -558,7 +591,8 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
           description={isMobile && config.mobileDescription ? config.mobileDescription : config.description}
           keyboardHint={isMobile ? undefined : config.keyboardHint}
           position={config.tooltipPosition}
-          targetRect={targetRect}
+          // Center the tooltip during celebration (except shortcuts which targets modal)
+          targetRect={showStepCelebration && currentStep !== "shortcuts" ? null : targetRect}
           showSuccess={showStepCelebration}
           successMessage={celebrationMessage}
           onAction={(config.actionLabel || (isMobile && config.mobileActionLabel)) ? handleAction : undefined}
@@ -598,6 +632,83 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
           />
         ))}
       </div>
+
+      {/* Celebration animations */}
+      <style jsx>{`
+        @keyframes celebrationBounce {
+          0% {
+            transform: scale(0.3);
+            opacity: 0;
+          }
+          50% {
+            transform: scale(1.1);
+          }
+          70% {
+            transform: scale(0.95);
+          }
+          100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+        @keyframes celebrationPulse {
+          0%, 100% {
+            box-shadow: 0 0 60px rgba(16, 185, 129, 0.6), 0 0 120px rgba(16, 185, 129, 0.3);
+          }
+          50% {
+            box-shadow: 0 0 80px rgba(16, 185, 129, 0.8), 0 0 160px rgba(16, 185, 129, 0.4);
+          }
+        }
+        @keyframes celebrationCheck {
+          0% {
+            stroke-dasharray: 50;
+            stroke-dashoffset: 50;
+          }
+          100% {
+            stroke-dashoffset: 0;
+          }
+        }
+        @keyframes celebrationParticle0 {
+          0% {
+            transform: translate(0, 0) scale(1);
+            opacity: 1;
+          }
+          100% {
+            transform: translate(-80px, -120px) scale(0);
+            opacity: 0;
+          }
+        }
+        @keyframes celebrationParticle1 {
+          0% {
+            transform: translate(0, 0) scale(1);
+            opacity: 1;
+          }
+          100% {
+            transform: translate(90px, -100px) scale(0);
+            opacity: 0;
+          }
+        }
+        @keyframes celebrationParticle2 {
+          0% {
+            transform: translate(0, 0) scale(1);
+            opacity: 1;
+          }
+          100% {
+            transform: translate(-60px, 110px) scale(0);
+            opacity: 0;
+          }
+        }
+        @keyframes celebrationParticle3 {
+          0% {
+            transform: translate(0, 0) scale(1);
+            opacity: 1;
+          }
+          100% {
+            transform: translate(70px, 90px) scale(0);
+            opacity: 0;
+          }
+        }
+      `}</style>
     </div>
   );
 }
