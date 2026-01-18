@@ -15,6 +15,24 @@ interface ShortcutGroup {
 
 const shortcutGroups: ShortcutGroup[] = [
   {
+    title: "Home Page",
+    shortcuts: [
+      { keys: ["Tab"], description: "Switch upload / paste" },
+      { keys: ["1", "2"], description: "Select input method" },
+      { keys: ["⇧", "U"], description: "Upload file" },
+      { keys: ["⇧", "P"], description: "Paste text" },
+    ],
+  },
+  {
+    title: "Mode Selection",
+    shortcuts: [
+      { keys: ["1"], description: "Reading mode" },
+      { keys: ["2"], description: "Challenge mode" },
+      { keys: ["Enter"], description: "Start reading" },
+      { keys: ["N"], description: "Upload new file" },
+    ],
+  },
+  {
     title: "Playback",
     shortcuts: [
       { keys: ["Space"], description: "Play / Pause" },

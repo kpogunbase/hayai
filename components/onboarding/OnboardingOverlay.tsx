@@ -35,11 +35,13 @@ const STEP_CONFIGS: Record<OnboardingStep, StepConfig> = {
     title: "Welcome to Hayai",
     description: "Learn to speed read in under 60 seconds. Let's get started!",
     actionLabel: "Let's go",
+    keyboardHint: "Space",
   },
   upload: {
     title: "Load your text",
-    description: "Drop a file to read, or try our demo text to see how it works.",
+    description: "Drop a file, or press D to try our demo text.",
     actionLabel: "Use demo text",
+    keyboardHint: "D",
     targetSelector: "[data-onboarding='upload']",
     tooltipPosition: "bottom",
   },
@@ -67,8 +69,9 @@ const STEP_CONFIGS: Record<OnboardingStep, StepConfig> = {
   },
   speed: {
     title: "Adjust your speed",
-    description: "Drag the slider to find your comfortable reading speed. Start slow and build up!",
+    description: "Drag the slider or press Enter when ready to continue.",
     actionLabel: "Got it",
+    keyboardHint: "Enter",
     targetSelector: "[data-onboarding='wpm-slider']",
     tooltipPosition: "top",
   },
@@ -86,6 +89,7 @@ const STEP_CONFIGS: Record<OnboardingStep, StepConfig> = {
     title: "You're all set!",
     description: "You've learned the basics. Discover more features as you read.",
     actionLabel: "Start reading",
+    keyboardHint: "Enter",
   },
 };
 
@@ -107,6 +111,7 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
 
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [isTooltipReady, setIsTooltipReady] = useState(false);
   const isMobile = useIsMobile();
 
   // Fade in on mount
@@ -118,6 +123,13 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
       setIsVisible(false);
     }
   }, [isActive]);
+
+  // Delay tooltip visibility to prevent flash when position changes
+  useEffect(() => {
+    setIsTooltipReady(false);
+    const timer = setTimeout(() => setIsTooltipReady(true), 100);
+    return () => clearTimeout(timer);
+  }, [currentStep, showStepCelebration]);
 
   // Update target rect when step changes
   useEffect(() => {
@@ -174,6 +186,9 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
         return;
       }
 
+      // Don't process during celebration animation
+      if (showStepCelebration) return;
+
       // Welcome step - Space or Enter to continue
       if (currentStep === "welcome") {
         if (e.code === "Space" || e.code === "Enter") {
@@ -183,7 +198,28 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
         return;
       }
 
-      // Complete step - Enter to finish
+      // Upload step - D to load demo text
+      if (currentStep === "upload") {
+        if (e.key.toLowerCase() === "d") {
+          e.preventDefault();
+          if (onLoadDemoText) {
+            onLoadDemoText(DEMO_TEXT);
+          }
+          reportAction("upload");
+        }
+        return;
+      }
+
+      // Speed step - Enter to continue
+      if (currentStep === "speed") {
+        if (e.code === "Enter") {
+          e.preventDefault();
+          nextStep();
+        }
+        return;
+      }
+
+      // Complete step - Enter or Space to finish
       if (currentStep === "complete") {
         if (e.code === "Enter" || e.code === "Space") {
           e.preventDefault();
@@ -195,7 +231,7 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
 
     window.addEventListener("keydown", handleKeyDown, true);
     return () => window.removeEventListener("keydown", handleKeyDown, true);
-  }, [isActive, currentStep, nextStep, skipOnboarding, completeOnboarding]);
+  }, [isActive, currentStep, nextStep, skipOnboarding, completeOnboarding, onLoadDemoText, reportAction, showStepCelebration]);
 
   // Handle action button clicks
   const handleAction = useCallback(() => {
@@ -575,7 +611,7 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
                 color: "var(--text-tertiary)",
               }}
             >
-              Press <kbd style={kbdStyle}>{currentStep === "welcome" ? "Space" : "Enter"}</kbd> to continue
+              Press <kbd style={kbdStyle}>{config.keyboardHint || "Enter"}</kbd> to continue
               {currentStep === "welcome" && (
                 <> or <kbd style={kbdStyle}>Esc</kbd> to skip</>
               )}
@@ -585,7 +621,7 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
       )}
 
       {/* Tooltip for targeted steps */}
-      {!isFullScreen && (
+      {!isFullScreen && isTooltipReady && (
         <OnboardingTooltip
           title={config.title}
           description={isMobile && config.mobileDescription ? config.mobileDescription : config.description}

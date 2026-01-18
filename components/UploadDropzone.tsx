@@ -1,11 +1,15 @@
 "use client";
 
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, forwardRef, useImperativeHandle } from "react";
 
 interface UploadDropzoneProps {
   onFileSelected: (file: File) => void;
   isLoading?: boolean;
   error?: string | null;
+}
+
+export interface UploadDropzoneRef {
+  triggerUpload: () => void;
 }
 
 const ACCEPTED_EXTENSIONS = [".txt", ".docx", ".pdf", ".epub"];
@@ -47,10 +51,18 @@ function getFileIcon(filename: string) {
   );
 }
 
-export function UploadDropzone({ onFileSelected, isLoading, error }: UploadDropzoneProps) {
+export const UploadDropzone = forwardRef<UploadDropzoneRef, UploadDropzoneProps>(
+  function UploadDropzone({ onFileSelected, isLoading, error }, ref) {
   const [isDragging, setIsDragging] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Expose triggerUpload method to parent via ref
+  useImperativeHandle(ref, () => ({
+    triggerUpload: () => {
+      if (!isLoading) fileInputRef.current?.click();
+    },
+  }), [isLoading]);
 
   const displayError = error || localError;
 
@@ -211,4 +223,4 @@ export function UploadDropzone({ onFileSelected, isLoading, error }: UploadDropz
       `}</style>
     </div>
   );
-}
+});

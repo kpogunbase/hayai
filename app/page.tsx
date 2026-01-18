@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useState, useEffect, Suspense } from "react";
+import { useCallback, useState, useEffect, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { UploadDropzone } from "@/components/UploadDropzone";
+import { UploadDropzone, UploadDropzoneRef } from "@/components/UploadDropzone";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UserMenu } from "@/components/UserMenu";
 import { PaywallModal } from "@/components/PaywallModal";
@@ -31,6 +31,15 @@ import {
 } from "@/lib/usage";
 
 type InputMethod = "upload" | "paste";
+type ReadingMode = "reading" | "challenge";
+
+interface ParsedContent {
+  tokens: string[];
+  text: string;
+  title: string;
+  fileType: string;
+  filename?: string;
+}
 
 function HomePageContent() {
   const router = useRouter();
@@ -46,6 +55,13 @@ function HomePageContent() {
   const [showPasteModal, setShowPasteModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
+
+  // Mode selection state (after parsing)
+  const [parsedContent, setParsedContent] = useState<ParsedContent | null>(null);
+  const [selectedMode, setSelectedMode] = useState<ReadingMode>("reading");
+
+  // Ref for triggering file upload
+  const uploadRef = useRef<UploadDropzoneRef>(null);
 
   // Library state
   const isLibraryOpen = useLibraryStore((s) => s.isOpen);
@@ -78,7 +94,43 @@ function HomePageContent() {
     }
   }, [searchParams]);
 
-  // Keyboard shortcuts (L for library, F for feedback)
+  // Start reading with selected mode
+  const handleStartReading = useCallback(async () => {
+    if (!parsedContent) return;
+
+    try {
+      // Save to library
+      const doc = await saveDocument({
+        title: parsedContent.title,
+        fileType: parsedContent.fileType as "txt" | "docx" | "pdf" | "epub" | "paste",
+        originalFilename: parsedContent.filename,
+        rawText: parsedContent.text,
+      }, user?.id ?? null);
+
+      // Set up reader with document and mode
+      setReaderDocument(doc.id, parsedContent.tokens, parsedContent.text);
+
+      // Store selected mode in session storage for reader page to pick up
+      sessionStorage.setItem("hayai_mode", selectedMode);
+
+      // Navigate to reader
+      router.push("/reader");
+    } catch {
+      // If save fails, still proceed to reader
+      sessionStorage.setItem("hayai_tokens", JSON.stringify(parsedContent.tokens));
+      sessionStorage.setItem("hayai_mode", selectedMode);
+      router.push("/reader");
+    }
+  }, [parsedContent, selectedMode, user?.id, setReaderDocument, router]);
+
+  // Reset to initial state (upload new file)
+  const handleUploadNew = useCallback(() => {
+    setParsedContent(null);
+    setSelectedMode("reading");
+    setError(null);
+  }, []);
+
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger if typing in an input
@@ -89,9 +141,69 @@ function HomePageContent() {
         return;
       }
 
+      // Mode selection shortcuts (when content is parsed)
+      if (parsedContent) {
+        if (e.key === "1" || e.key.toLowerCase() === "r") {
+          e.preventDefault();
+          setSelectedMode("reading");
+        } else if (e.key === "2" || e.key.toLowerCase() === "c") {
+          e.preventDefault();
+          setSelectedMode("challenge");
+        } else if (e.key === "Enter") {
+          e.preventDefault();
+          handleStartReading();
+        } else if (e.key.toLowerCase() === "n") {
+          e.preventDefault();
+          handleUploadNew();
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          handleUploadNew();
+        }
+        return;
+      }
+
+      // Tab to switch between upload and paste
+      if (e.key === "Tab" && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        // Only intercept if no modal is open
+        if (!showPasteModal && !showFeedbackModal && !showAnalyticsModal && !isLibraryOpen) {
+          e.preventDefault();
+          setInputMethod(prev => prev === "upload" ? "paste" : "upload");
+        }
+        return;
+      }
+
+      // Shift+U to trigger file upload
+      if (e.shiftKey && e.key.toLowerCase() === "u") {
+        e.preventDefault();
+        setInputMethod("upload");
+        // Small delay to ensure the dropzone is visible
+        setTimeout(() => uploadRef.current?.triggerUpload(), 50);
+        return;
+      }
+
+      // Shift+P to open paste modal
+      if (e.shiftKey && e.key.toLowerCase() === "p") {
+        e.preventDefault();
+        setInputMethod("paste");
+        setShowPasteModal(true);
+        return;
+      }
+
+      // 1/2 to switch input method tabs (when not in mode selection)
+      if (e.key === "1") {
+        e.preventDefault();
+        setInputMethod("upload");
+        return;
+      }
+      if (e.key === "2") {
+        e.preventDefault();
+        setInputMethod("paste");
+        return;
+      }
+
       if (e.key.toLowerCase() === "l") {
         setLibraryOpen(!isLibraryOpen);
-      } else if (e.key.toLowerCase() === "f") {
+      } else if (e.key.toLowerCase() === "f" && !e.shiftKey) {
         e.preventDefault();
         setShowFeedbackModal(true);
       } else if (e.key.toLowerCase() === "a") {
@@ -112,9 +224,32 @@ function HomePageContent() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isLibraryOpen, setLibraryOpen, showPasteModal, showFeedbackModal, showAnalyticsModal]);
+  }, [isLibraryOpen, setLibraryOpen, showPasteModal, showFeedbackModal, showAnalyticsModal, parsedContent, selectedMode, handleStartReading, handleUploadNew]);
 
-  // Process and navigate to reader
+  // Process file and show mode selection (or navigate directly on mobile)
+  const processContent = useCallback(
+    async (
+      text: string,
+      title: string,
+      fileType: string,
+      filename?: string
+    ) => {
+      const tokens = tokenize(text);
+
+      if (tokens.length === 0) {
+        setError("No readable text found in the content.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Store parsed content for mode selection
+      setParsedContent({ tokens, text, title, fileType, filename });
+      setIsLoading(false);
+    },
+    []
+  );
+
+  // Direct navigation (used by onboarding/demo)
   const processAndNavigate = useCallback(
     async (
       text: string,
@@ -188,7 +323,7 @@ function HomePageContent() {
         // Get file type from extension
         const ext = file.name.split(".").pop()?.toLowerCase() || "txt";
 
-        await processAndNavigate(text, file.name, ext, file.name);
+        await processContent(text, file.name, ext, file.name);
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to process file.";
@@ -196,7 +331,7 @@ function HomePageContent() {
         setIsLoading(false);
       }
     },
-    [user, subscription, processAndNavigate]
+    [user, subscription, processContent]
   );
 
   const handlePasteSubmit = useCallback(
@@ -232,7 +367,7 @@ function HomePageContent() {
         //   incrementLocalUsage();
         // }
 
-        await processAndNavigate(text, title, "paste");
+        await processContent(text, title, "paste");
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to process text.";
@@ -240,7 +375,7 @@ function HomePageContent() {
         setIsLoading(false);
       }
     },
-    [user, subscription, processAndNavigate]
+    [user, subscription, processContent]
   );
 
   // Handle document selection from library
@@ -533,81 +668,284 @@ function HomePageContent() {
             </p>
           </div>
 
-          {/* Input method selector */}
-          <div
-            style={{
-              display: "flex",
-              marginBottom: "16px",
-              backgroundColor: "var(--bg-secondary)",
-              borderRadius: "10px",
-              padding: "4px",
-            }}
-          >
-            <button
-              onClick={() => setInputMethod("upload")}
-              style={{
-                flex: 1,
-                padding: "10px 16px",
-                fontSize: "14px",
-                fontWeight: 500,
-                color:
-                  inputMethod === "upload"
-                    ? "var(--text-primary)"
-                    : "var(--text-secondary)",
-                backgroundColor:
-                  inputMethod === "upload"
-                    ? "var(--bg-primary)"
-                    : "transparent",
-                border: "none",
-                borderRadius: "8px",
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-                boxShadow:
-                  inputMethod === "upload"
-                    ? "0 1px 3px var(--shadow)"
-                    : "none",
-              }}
-            >
-              Upload File
-            </button>
-            <button
-              onClick={() => setInputMethod("paste")}
-              style={{
-                flex: 1,
-                padding: "10px 16px",
-                fontSize: "14px",
-                fontWeight: 500,
-                color:
-                  inputMethod === "paste"
-                    ? "var(--text-primary)"
-                    : "var(--text-secondary)",
-                backgroundColor:
-                  inputMethod === "paste"
-                    ? "var(--bg-primary)"
-                    : "transparent",
-                border: "none",
-                borderRadius: "8px",
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-                boxShadow:
-                  inputMethod === "paste" ? "0 1px 3px var(--shadow)" : "none",
-              }}
-            >
-              Paste Text
-            </button>
-          </div>
+          {/* Mode selection (after parsing) */}
+          {parsedContent ? (
+            <>
+              {/* Document info */}
+              <div
+                style={{
+                  padding: "20px",
+                  backgroundColor: "var(--bg-secondary)",
+                  borderRadius: "12px",
+                  marginBottom: "16px",
+                  textAlign: "center",
+                }}
+              >
+                <div
+                  style={{
+                    width: "48px",
+                    height: "48px",
+                    margin: "0 auto 16px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "var(--bg-tertiary)",
+                    borderRadius: "12px",
+                    color: "var(--accent)",
+                  }}
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                  </svg>
+                </div>
+                <h3
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: 600,
+                    color: "var(--text-primary)",
+                    margin: "0 0 4px",
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {parsedContent.title}
+                </h3>
+                <p
+                  style={{
+                    fontSize: "14px",
+                    color: "var(--text-secondary)",
+                    margin: 0,
+                  }}
+                >
+                  {parsedContent.tokens.length.toLocaleString()} words
+                </p>
+              </div>
 
-          {/* Upload dropzone or Paste button */}
-          {inputMethod === "upload" ? (
-            <div data-onboarding="upload">
-              <UploadDropzone
-                onFileSelected={handleFileSelected}
-                isLoading={isLoading}
-                error={error}
-              />
-            </div>
+              {/* Mode selector */}
+              <div
+                style={{
+                  display: "flex",
+                  marginBottom: "16px",
+                  backgroundColor: "var(--bg-secondary)",
+                  borderRadius: "10px",
+                  padding: "4px",
+                }}
+              >
+                <button
+                  onClick={() => setSelectedMode("reading")}
+                  style={{
+                    flex: 1,
+                    padding: "12px 16px",
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    color:
+                      selectedMode === "reading"
+                        ? "var(--text-primary)"
+                        : "var(--text-secondary)",
+                    backgroundColor:
+                      selectedMode === "reading"
+                        ? "var(--bg-primary)"
+                        : "transparent",
+                    border: "none",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                    boxShadow:
+                      selectedMode === "reading"
+                        ? "0 1px 3px var(--shadow)"
+                        : "none",
+                  }}
+                >
+                  <span style={{ display: "block", marginBottom: "2px" }}>Reading Mode</span>
+                  {!isMobile && (
+                    <span style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>
+                      Manual WPM control
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={() => setSelectedMode("challenge")}
+                  style={{
+                    flex: 1,
+                    padding: "12px 16px",
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    color:
+                      selectedMode === "challenge"
+                        ? "var(--text-primary)"
+                        : "var(--text-secondary)",
+                    backgroundColor:
+                      selectedMode === "challenge"
+                        ? "var(--bg-primary)"
+                        : "transparent",
+                    border: "none",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                    boxShadow:
+                      selectedMode === "challenge"
+                        ? "0 1px 3px var(--shadow)"
+                        : "none",
+                  }}
+                >
+                  <span style={{ display: "block", marginBottom: "2px" }}>Challenge Mode</span>
+                  {!isMobile && (
+                    <span style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>
+                      Auto-ramp to 900 WPM
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {/* Start button */}
+              <button
+                onClick={handleStartReading}
+                style={{
+                  width: "100%",
+                  padding: "14px 24px",
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  color: "#fff",
+                  background: "var(--accent-gradient)",
+                  border: "none",
+                  borderRadius: "10px",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                  marginBottom: "12px",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                  e.currentTarget.style.boxShadow = "0 4px 12px var(--shadow)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              >
+                Start Reading
+              </button>
+
+              {/* Upload new button */}
+              <button
+                onClick={handleUploadNew}
+                style={{
+                  width: "100%",
+                  padding: "12px 24px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  color: "var(--text-secondary)",
+                  backgroundColor: "transparent",
+                  border: "1px solid var(--border)",
+                  borderRadius: "10px",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
+                  e.currentTarget.style.color = "var(--text-primary)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                  e.currentTarget.style.color = "var(--text-secondary)";
+                }}
+              >
+                Upload Different File
+              </button>
+
+              {/* Keyboard hints */}
+              {!isMobile && (
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "var(--text-tertiary)",
+                    marginTop: "16px",
+                    textAlign: "center",
+                  }}
+                >
+                  <kbd style={kbdStyle}>1</kbd> Reading <kbd style={kbdStyle}>2</kbd> Challenge <kbd style={kbdStyle}>Enter</kbd> Start <kbd style={kbdStyle}>N</kbd> New file
+                </p>
+              )}
+            </>
           ) : (
-            <div
+            <>
+              {/* Input method selector */}
+              <div
+                style={{
+                  display: "flex",
+                  marginBottom: "16px",
+                  backgroundColor: "var(--bg-secondary)",
+                  borderRadius: "10px",
+                  padding: "4px",
+                }}
+              >
+                <button
+                  onClick={() => setInputMethod("upload")}
+                  style={{
+                    flex: 1,
+                    padding: "10px 16px",
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    color:
+                      inputMethod === "upload"
+                        ? "var(--text-primary)"
+                        : "var(--text-secondary)",
+                    backgroundColor:
+                      inputMethod === "upload"
+                        ? "var(--bg-primary)"
+                        : "transparent",
+                    border: "none",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                    boxShadow:
+                      inputMethod === "upload"
+                        ? "0 1px 3px var(--shadow)"
+                        : "none",
+                  }}
+                >
+                  Upload File
+                </button>
+                <button
+                  onClick={() => setInputMethod("paste")}
+                  style={{
+                    flex: 1,
+                    padding: "10px 16px",
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    color:
+                      inputMethod === "paste"
+                        ? "var(--text-primary)"
+                        : "var(--text-secondary)",
+                    backgroundColor:
+                      inputMethod === "paste"
+                        ? "var(--bg-primary)"
+                        : "transparent",
+                    border: "none",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                    boxShadow:
+                      inputMethod === "paste" ? "0 1px 3px var(--shadow)" : "none",
+                  }}
+                >
+                  Paste Text
+                </button>
+              </div>
+
+              {/* Upload dropzone or Paste button */}
+              {inputMethod === "upload" ? (
+                <div data-onboarding="upload">
+                  <UploadDropzone
+                    ref={uploadRef}
+                    onFileSelected={handleFileSelected}
+                    isLoading={isLoading}
+                    error={error}
+                  />
+                </div>
+              ) : (
+                <div
               onClick={() => !isLoading && setShowPasteModal(true)}
               style={{
                 border: "2px dashed var(--border-strong)",
@@ -698,109 +1036,111 @@ function HomePageContent() {
             </div>
           )}
 
-          {/* Error display for paste mode */}
-          {inputMethod === "paste" && error && (
-            <div
-              style={{
-                marginTop: "16px",
-                padding: "12px 16px",
-                backgroundColor: "rgba(220, 38, 38, 0.1)",
-                border: "1px solid rgba(220, 38, 38, 0.2)",
-                borderRadius: "8px",
-                color: "var(--orp-highlight)",
-                fontSize: "14px",
-              }}
-            >
-              {error}
-            </div>
-          )}
-
-          {/* DISABLED: Usage info and upgrade button - set to true to re-enable */}
-          {false && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginTop: "20px",
-              padding: "12px 16px",
-              backgroundColor: "var(--bg-secondary)",
-              borderRadius: "8px",
-              fontSize: "13px",
-            }}
-          >
-            <span style={{ color: "var(--text-secondary)" }}>
-              {remainingUploads === "Unlimited" ? (
-                <>
-                  <span style={{ color: "var(--accent)", fontWeight: 600 }}>
-                    Pro
-                  </span>{" "}
-                  — Unlimited uploads
-                </>
-              ) : subscription?.plan === "monthly" ? (
-                <>
-                  <span style={{ color: "var(--accent)", fontWeight: 600 }}>
-                    Pro
-                  </span>{" "}
-                  — {remainingUploads} uploads remaining this month
-                </>
-              ) : (
-                <>Uploads remaining: {remainingUploads}</>
+              {/* Error display for paste mode */}
+              {inputMethod === "paste" && error && (
+                <div
+                  style={{
+                    marginTop: "16px",
+                    padding: "12px 16px",
+                    backgroundColor: "rgba(220, 38, 38, 0.1)",
+                    border: "1px solid rgba(220, 38, 38, 0.2)",
+                    borderRadius: "8px",
+                    color: "var(--orp-highlight)",
+                    fontSize: "14px",
+                  }}
+                >
+                  {error}
+                </div>
               )}
-            </span>
-            {subscription?.status !== "active" && (
-              <button
-                onClick={() => setShowPaywall(true)}
+
+              {/* DISABLED: Usage info and upgrade button - set to true to re-enable */}
+              {false && (
+              <div
                 style={{
-                  padding: "6px 12px",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  color: "var(--accent)",
-                  backgroundColor: "transparent",
-                  border: "1px solid var(--accent)",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  transition: "all 0.15s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "var(--accent)";
-                  e.currentTarget.style.color = "#fff";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                  e.currentTarget.style.color = "var(--accent)";
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginTop: "20px",
+                  padding: "12px 16px",
+                  backgroundColor: "var(--bg-secondary)",
+                  borderRadius: "8px",
+                  fontSize: "13px",
                 }}
               >
-                Upgrade
-              </button>
-            )}
-          </div>
-          )}
+                <span style={{ color: "var(--text-secondary)" }}>
+                  {remainingUploads === "Unlimited" ? (
+                    <>
+                      <span style={{ color: "var(--accent)", fontWeight: 600 }}>
+                        Pro
+                      </span>{" "}
+                      — Unlimited uploads
+                    </>
+                  ) : subscription?.plan === "monthly" ? (
+                    <>
+                      <span style={{ color: "var(--accent)", fontWeight: 600 }}>
+                        Pro
+                      </span>{" "}
+                      — {remainingUploads} uploads remaining this month
+                    </>
+                  ) : (
+                    <>Uploads remaining: {remainingUploads}</>
+                  )}
+                </span>
+                {subscription?.status !== "active" && (
+                  <button
+                    onClick={() => setShowPaywall(true)}
+                    style={{
+                      padding: "6px 12px",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      color: "var(--accent)",
+                      backgroundColor: "transparent",
+                      border: "1px solid var(--accent)",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "var(--accent)";
+                      e.currentTarget.style.color = "#fff";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "transparent";
+                      e.currentTarget.style.color = "var(--accent)";
+                    }}
+                  >
+                    Upgrade
+                  </button>
+                )}
+              </div>
+              )}
 
-          {/* Footer hint */}
-          <p
-            style={{
-              fontSize: "13px",
-              color: "var(--text-tertiary)",
-              marginTop: "24px",
-              textAlign: "center",
-            }}
-          >
-            Your files are processed locally and never uploaded to any server.
-          </p>
+              {/* Footer hint */}
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: "var(--text-tertiary)",
+                  marginTop: "24px",
+                  textAlign: "center",
+                }}
+              >
+                Your files are processed locally and never uploaded to any server.
+              </p>
 
-          {/* Keyboard hint - hide on mobile */}
-          {!isMobile && (
-            <p
-              style={{
-                fontSize: "12px",
-                color: "var(--text-tertiary)",
-                marginTop: "8px",
-                textAlign: "center",
-              }}
-            >
-              Press <kbd style={kbdStyle}>L</kbd> Library, <kbd style={kbdStyle}>A</kbd> Analytics, <kbd style={kbdStyle}>F</kbd> Feedback
-            </p>
+              {/* Keyboard hint - hide on mobile */}
+              {!isMobile && (
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "var(--text-tertiary)",
+                    marginTop: "8px",
+                    textAlign: "center",
+                  }}
+                >
+                  <kbd style={kbdStyle}>Tab</kbd> Switch input <kbd style={kbdStyle}>Shift+U</kbd> Upload <kbd style={kbdStyle}>Shift+P</kbd> Paste
+                </p>
+              )}
+            </>
           )}
         </div>
       </div>

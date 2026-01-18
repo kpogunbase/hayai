@@ -160,6 +160,16 @@ export default function ReaderPage() {
     router.push("/");
   }, [router, readerStore.tokens, readerStore.documentId, readerStore.rawText]);
 
+  // Load mode from session storage (set by homepage mode selector)
+  useEffect(() => {
+    const storedMode = sessionStorage.getItem("hayai_mode");
+    if (storedMode === "reading" || storedMode === "challenge") {
+      setMode(storedMode);
+      // Clear after reading to avoid persisting across sessions
+      sessionStorage.removeItem("hayai_mode");
+    }
+  }, []);
+
   // Helper to calculate gradual increase stage based on progress
   const getGradualStageAndWpm = useCallback((currentIndex: number, totalTokens: number): { stage: number; wpm: number } => {
     if (totalTokens === 0) return { stage: 0, wpm: GRADUAL_STAGES[0] };
@@ -526,6 +536,10 @@ export default function ReaderPage() {
       // Check for ? key (Shift + / or ?)
       if (e.key === "?" || (e.shiftKey && e.code === "Slash")) {
         e.preventDefault();
+        // Pause reading when opening shortcuts modal
+        if (isPlayingRef.current) {
+          handlePlayPause();
+        }
         setIsShortcutsModalOpen(true);
         if (onboardingActive) reportOnboardingAction("help");
       }
