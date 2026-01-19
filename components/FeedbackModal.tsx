@@ -11,71 +11,13 @@ interface FeedbackModalProps {
   page: "home" | "reader";
 }
 
-// Type declarations for Web Speech API
-interface SpeechRecognitionEvent extends Event {
-  results: SpeechRecognitionResultList;
-  resultIndex: number;
-}
-
-interface SpeechRecognitionErrorEvent extends Event {
-  error: string;
-  message?: string;
-}
-
-interface SpeechRecognitionResultList {
-  length: number;
-  item(index: number): SpeechRecognitionResult;
-  [index: number]: SpeechRecognitionResult;
-}
-
-interface SpeechRecognitionResult {
-  length: number;
-  item(index: number): SpeechRecognitionAlternative;
-  [index: number]: SpeechRecognitionAlternative;
-  isFinal: boolean;
-}
-
-interface SpeechRecognitionAlternative {
-  transcript: string;
-  confidence: number;
-}
-
-interface SpeechRecognition extends EventTarget {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  start(): void;
-  stop(): void;
-  abort(): void;
-  onresult: ((event: SpeechRecognitionEvent) => void) | null;
-  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
-  onend: (() => void) | null;
-  onstart: (() => void) | null;
-}
-
-declare global {
-  interface Window {
-    SpeechRecognition?: new () => SpeechRecognition;
-    webkitSpeechRecognition?: new () => SpeechRecognition;
-  }
-}
-
 export function FeedbackModal({ isOpen, onClose, page }: FeedbackModalProps) {
   const [feedback, setFeedback] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
-  const [speechSupported, setSpeechSupported] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const { session } = useAuth();
   const isMobile = useIsMobile();
-
-  // Check for speech recognition support
-  useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    setSpeechSupported(!!SpeechRecognition);
-  }, []);
 
   // Focus textarea when modal opens
   useEffect(() => {
@@ -91,81 +33,8 @@ export function FeedbackModal({ isOpen, onClose, page }: FeedbackModalProps) {
     if (!isOpen) {
       setFeedback("");
       setSubmitStatus("idle");
-      stopRecording();
     }
   }, [isOpen]);
-
-  // Cleanup recognition on unmount
-  useEffect(() => {
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-      }
-    };
-  }, []);
-
-  const startRecording = useCallback(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
-
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = "en-US";
-
-    recognition.onstart = () => {
-      setIsRecording(true);
-    };
-
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let interimTranscript = "";
-      let finalTranscript = "";
-
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript;
-        } else {
-          interimTranscript += transcript;
-        }
-      }
-
-      if (finalTranscript) {
-        setFeedback((prev) => {
-          const separator = prev && !prev.endsWith(" ") ? " " : "";
-          return prev + separator + finalTranscript;
-        });
-      }
-    };
-
-    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      console.error("Speech recognition error:", event.error);
-      setIsRecording(false);
-    };
-
-    recognition.onend = () => {
-      setIsRecording(false);
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
-  }, []);
-
-  const stopRecording = useCallback(() => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      recognitionRef.current = null;
-    }
-    setIsRecording(false);
-  }, []);
-
-  const toggleRecording = useCallback(() => {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
-  }, [isRecording, startRecording, stopRecording]);
 
   const handleSubmit = useCallback(async () => {
     if (!feedback.trim() || isSubmitting) return;
@@ -202,14 +71,13 @@ export function FeedbackModal({ isOpen, onClose, page }: FeedbackModalProps) {
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Escape") {
-        stopRecording();
         onClose();
       } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         handleSubmit();
       }
     },
-    [onClose, handleSubmit, stopRecording]
+    [onClose, handleSubmit]
   );
 
   if (!isOpen) return null;
@@ -231,10 +99,7 @@ export function FeedbackModal({ isOpen, onClose, page }: FeedbackModalProps) {
     >
       {/* Backdrop */}
       <div
-        onClick={() => {
-          stopRecording();
-          onClose();
-        }}
+        onClick={onClose}
         style={{
           position: "absolute",
           inset: 0,
@@ -280,10 +145,7 @@ export function FeedbackModal({ isOpen, onClose, page }: FeedbackModalProps) {
             Send Feedback
           </h2>
           <button
-            onClick={() => {
-              stopRecording();
-              onClose();
-            }}
+            onClick={onClose}
             style={{
               width: "32px",
               height: "32px",
@@ -338,7 +200,7 @@ export function FeedbackModal({ isOpen, onClose, page }: FeedbackModalProps) {
               ref={textareaRef}
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
-              placeholder="Type your feedback here or use the microphone to dictate..."
+              placeholder="Type your feedback here..."
               style={{
                 flex: 1,
                 minHeight: "150px",
@@ -363,64 +225,14 @@ export function FeedbackModal({ isOpen, onClose, page }: FeedbackModalProps) {
             />
           </div>
 
-          {/* Controls row */}
+          {/* Character count */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
+              justifyContent: "flex-end",
             }}
           >
-            {/* Mic button */}
-            {speechSupported && (
-              <button
-                onClick={toggleRecording}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "8px 12px",
-                  fontSize: "13px",
-                  fontWeight: 500,
-                  color: isRecording ? "#fff" : "var(--text-secondary)",
-                  backgroundColor: isRecording ? "#ef4444" : "var(--bg-secondary)",
-                  border: "1px solid",
-                  borderColor: isRecording ? "#ef4444" : "var(--border)",
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  transition: "all 150ms ease",
-                  animation: isRecording ? "pulse 1.5s ease-in-out infinite" : "none",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isRecording) {
-                    e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isRecording) {
-                    e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
-                  }
-                }}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                  <line x1="12" x2="12" y1="19" y2="22" />
-                </svg>
-                {isRecording ? "Recording..." : "Dictate"}
-              </button>
-            )}
-
-            {/* Character count */}
             <span
               style={{
                 fontSize: "13px",
@@ -488,10 +300,7 @@ export function FeedbackModal({ isOpen, onClose, page }: FeedbackModalProps) {
           )}
           <div style={{ display: "flex", gap: "8px" }}>
             <button
-              onClick={() => {
-                stopRecording();
-                onClose();
-              }}
+              onClick={onClose}
               style={{
                 padding: "10px 16px",
                 fontSize: "14px",
@@ -560,14 +369,6 @@ export function FeedbackModal({ isOpen, onClose, page }: FeedbackModalProps) {
           to {
             opacity: 1;
             transform: scale(1) translateY(0);
-          }
-        }
-        @keyframes pulse {
-          0%, 100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.7;
           }
         }
       `}</style>

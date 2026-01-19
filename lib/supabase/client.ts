@@ -43,6 +43,7 @@ export function createClient(): SupabaseClient {
             single: async () => ({ data: null, error: null }),
           }),
         }),
+        insert: async () => ({ data: null, error: { message: "Supabase not configured. Missing environment variables.", code: "CONFIG_ERROR" } }),
         upsert: async () => ({ data: null, error: null }),
         update: () => ({
           eq: async () => ({ data: null, error: null }),

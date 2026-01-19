@@ -31,7 +31,7 @@ export function useAudio(): UseAudioReturn {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackId, setCurrentTrackId] = useState(1);
-  const [volume, setVolumeState] = useState(0.7);
+  const [volume, setVolumeState] = useState(0.42);
   const [isMuted, setIsMuted] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 

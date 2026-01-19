@@ -239,15 +239,7 @@ Run each check for at least 60–120 seconds to catch drift.
 - [ ] Character count updates
 - [ ] Submit button enabled when text present
 
-### 14.3 Speech-to-Text
-- [ ] Microphone button visible
-- [ ] Click mic → browser prompts for permission
-- [ ] Speaking → text appears in textarea
-- [ ] Mic button shows recording state (pulsing/red)
-- [ ] Click mic again → stops recording
-- [ ] Graceful fallback if speech API not supported
-
-### 14.4 Submission
+### 14.3 Submission
 - [ ] `Cmd/Ctrl + Enter` submits feedback
 - [ ] Submit button shows loading state
 - [ ] Success message shown after submit

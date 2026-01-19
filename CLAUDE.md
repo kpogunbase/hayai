@@ -122,7 +122,7 @@ hayai/
 │   ├── ProgressBar.tsx              # Reading progress
 │   ├── AudioPlayer.tsx              # Focus audio player
 │   ├── AnalyticsModal.tsx           # Reading statistics
-│   ├── FeedbackModal.tsx            # User feedback with speech-to-text
+│   ├── FeedbackModal.tsx            # User feedback modal
 │   ├── KeyboardShortcutsModal.tsx   # Shortcut reference
 │   ├── CelebrationOverlay.tsx       # Milestone celebrations
 │   └── ThemeToggle.tsx              # Dark/Light theme switch
@@ -335,7 +335,6 @@ interface OnboardingState {
 
 ### Feedback
 - Modal with text input
-- Speech-to-text via Web Speech API
 - Submits to Supabase `feedback` table
 
 ---
