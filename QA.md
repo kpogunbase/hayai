@@ -248,11 +248,37 @@ Run each check for at least 60–120 seconds to catch drift.
 
 ---
 
-## 15) Onboarding Flow
+## 15) Pre-Onboarding Intro
 
-### 15.1 First-Time User
-- [ ] New user (cleared localStorage) sees onboarding
-- [ ] Welcome screen displays with "Get Started" button
+### 15.1 Intro Animation
+- [ ] New user (cleared localStorage) sees intro before onboarding
+- [ ] RSVP words display one at a time
+- [ ] WPM increases progressively (200 → 400)
+- [ ] Progress bar at top tracks intro progress
+- [ ] Current WPM shown at bottom of screen
+
+### 15.2 Audio
+- [ ] Focus 2 audio plays during intro (may require user interaction)
+- [ ] Audio fades out smoothly when intro completes
+- [ ] Audio fades out smoothly when skipping
+
+### 15.3 Skip Functionality
+- [ ] Skip button appears after 2 seconds
+- [ ] `Space`, `Enter`, or `Esc` skips the intro
+- [ ] Click "Skip intro" button skips
+- [ ] After skip, transitions to main onboarding
+
+### 15.4 Completion
+- [ ] Intro completes after all segments play (~30 seconds)
+- [ ] Automatically transitions to main onboarding
+- [ ] No flicker or delay during transition
+
+---
+
+## 16) Onboarding Flow
+
+### 16.1 First-Time User
+- [ ] After intro, welcome screen displays with "Get Started" button
 - [ ] Skip button available throughout
 
 ### 15.2 Interactive Steps
@@ -280,9 +306,9 @@ Run each check for at least 60–120 seconds to catch drift.
 
 ---
 
-## 16) Keyboard Shortcuts
+## 17) Keyboard Shortcuts
 
-### 16.1 Home Page Shortcuts
+### 17.1 Home Page Shortcuts
 
 | Key | Expected Action | Works? |
 |-----|-----------------|--------|
@@ -299,7 +325,7 @@ Run each check for at least 60–120 seconds to catch drift.
 | `?` | Show Keyboard Shortcuts | [ ] |
 | `Esc` | Close open panel | [ ] |
 
-### 16.2 Mode Selection Shortcuts (after upload)
+### 17.2 Mode Selection Shortcuts (after upload)
 
 | Key | Expected Action | Works? |
 |-----|-----------------|--------|
@@ -309,7 +335,7 @@ Run each check for at least 60–120 seconds to catch drift.
 | `N` | Upload New File (reset) | [ ] |
 | `Esc` | Cancel and upload new | [ ] |
 
-### 16.3 Reader Page Shortcuts
+### 17.3 Reader Page Shortcuts
 
 | Key | Expected Action | Works? |
 |-----|-----------------|--------|
@@ -334,7 +360,7 @@ Run each check for at least 60–120 seconds to catch drift.
 | `.` | Next Audio Track | [ ] |
 | `Esc` | Close Open Panel | [ ] |
 
-### 16.4 Library Navigation Shortcuts
+### 17.4 Library Navigation Shortcuts
 
 | Key | Expected Action | Works? |
 |-----|-----------------|--------|
@@ -343,7 +369,15 @@ Run each check for at least 60–120 seconds to catch drift.
 | `Enter` | Open selected document | [ ] |
 | `Esc` | Close library | [ ] |
 
-### 16.5 Shortcut Edge Cases
+### 17.5 Shortcuts Modal Navigation
+- [ ] `↑` / `↓` scrolls the modal content
+- [ ] `j` / `k` (vim-style) scrolls the modal content
+- [ ] `Home` scrolls to top
+- [ ] `End` scrolls to bottom
+- [ ] `PageUp` / `PageDown` scrolls by page
+- [ ] `Esc` closes the modal
+
+### 17.6 Shortcut Edge Cases
 - [ ] Shortcuts don't trigger when typing in input/textarea
 - [ ] Multiple panels don't open simultaneously
 - [ ] `Esc` closes most recently opened panel first
@@ -354,7 +388,7 @@ Run each check for at least 60–120 seconds to catch drift.
 
 ---
 
-## 17) Persistence
+## 18) Persistence
 
 ### 17.1 Settings
 - [ ] Refresh page → mode/WPM/volume/track restore
@@ -372,7 +406,7 @@ Run each check for at least 60–120 seconds to catch drift.
 
 ---
 
-## 18) Mobile Responsiveness
+## 19) Mobile Responsiveness
 
 Test on iOS Safari and Android Chrome.
 
@@ -395,7 +429,7 @@ Test on iOS Safari and Android Chrome.
 
 ---
 
-## 19) Theme Switching
+## 20) Theme Switching
 
 - [ ] Theme toggle visible in UI
 - [ ] Click toggle → theme changes immediately
@@ -407,7 +441,7 @@ Test on iOS Safari and Android Chrome.
 
 ---
 
-## 20) Accessibility
+## 21) Accessibility
 
 - [ ] Buttons have accessible labels (aria-label)
 - [ ] Tab navigation reaches key controls
@@ -417,7 +451,7 @@ Test on iOS Safari and Android Chrome.
 
 ---
 
-## 21) Error States
+## 22) Error States
 
 - [ ] Network offline: app continues with local data
 - [ ] Supabase unavailable: feedback shows error, app continues
@@ -426,7 +460,27 @@ Test on iOS Safari and Android Chrome.
 
 ---
 
-## 22) Celebration Overlay
+## 23) Security
+
+### 23.1 Feedback Submission
+- [ ] Feedback requires non-empty content
+- [ ] Feedback content limited to 10,000 characters
+- [ ] Rapid submissions are rate-limited (5 per minute)
+- [ ] User ID is validated server-side (cannot be spoofed)
+
+### 23.2 Authentication
+- [ ] Protected routes redirect to login if unauthenticated
+- [ ] OAuth callback validates error states
+- [ ] Session refresh works via middleware
+
+### 23.3 Content Security
+- [ ] No `'unsafe-eval'` in production CSP
+- [ ] External scripts limited to allowed domains
+- [ ] Redirect URLs validated against allowlist
+
+---
+
+## 24) Celebration Overlay
 
 - [ ] Completing a passage shows celebration
 - [ ] Celebration includes visual feedback (confetti, animation)
@@ -436,7 +490,7 @@ Test on iOS Safari and Android Chrome.
 
 ---
 
-## 23) Final Sign-off
+## 25) Final Sign-off
 
 - [ ] No major console errors in a full session
 - [ ] Reading Mode meets requirements

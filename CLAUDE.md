@@ -107,6 +107,7 @@ hayai/
 │       └── callback/route.ts # OAuth callback handler
 ├── components/
 │   ├── onboarding/
+│   │   ├── PreOnboardingIntro.tsx   # 30-second RSVP intro with audio
 │   │   ├── OnboardingOverlay.tsx    # Main onboarding flow
 │   │   ├── OnboardingSpotlight.tsx  # Spotlight effect
 │   │   └── OnboardingTooltip.tsx    # Tooltip with keyboard hints
@@ -125,7 +126,7 @@ hayai/
 │   ├── AudioPlayer.tsx              # Focus audio player
 │   ├── AnalyticsModal.tsx           # Reading statistics
 │   ├── FeedbackModal.tsx            # User feedback modal
-│   ├── KeyboardShortcutsModal.tsx   # Shortcut reference
+│   ├── KeyboardShortcutsModal.tsx   # Shortcut reference (keyboard navigable)
 │   ├── CelebrationOverlay.tsx       # Milestone celebrations
 │   └── ThemeToggle.tsx              # Dark/Light theme switch
 ├── lib/
@@ -232,8 +233,10 @@ interface OnboardingState {
   isActive: boolean
   currentStep: OnboardingStep
   hasCompletedOnboarding: boolean
+  showIntro: boolean  // Pre-onboarding intro state
 
   // Actions
+  startOnboarding(), completeIntro()
   nextStep(), skipOnboarding(), completeOnboarding()
   reportAction(action) // For interactive steps
 }
@@ -329,6 +332,10 @@ interface OnboardingState {
 - Continues during reading
 
 ### Onboarding
+- **Pre-Onboarding Intro**: 30-second RSVP demonstration with Focus 2 audio
+  - Showcases speed progression from 200 to 400 WPM
+  - Audio fades out on completion/skip
+  - Skippable via Space, Enter, Esc, or button
 - Interactive 7-step tutorial
 - Spotlight effects on UI elements
 - Keyboard-driven progression

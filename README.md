@@ -34,11 +34,18 @@ Hayai is a modern speed reading web application that uses RSVP (Rapid Serial Vis
 - **Daily/Weekly/Monthly** — Time-based reading statistics
 
 ### User Experience
+- **Pre-Onboarding Intro** — 30-second RSVP demonstration with ambient audio, showcasing speed progression
 - **Interactive Onboarding** — Guided tutorial with spotlight effects and celebration animations
-- **Keyboard Shortcuts** — Full keyboard navigation support
+- **Keyboard Shortcuts** — Full keyboard navigation support (including vim-style j/k in modals)
 - **Mobile Responsive** — Bottom sheet modals, touch gestures, optimized layouts
 - **Dark/Light Theme** — System-aware with manual toggle
 - **Celebration Overlays** — Visual feedback for milestones (chapter/passage completion)
+
+### Security
+- **Rate Limiting** — API routes protected against spam
+- **Server-Side Validation** — User authentication validated server-side
+- **Row Level Security** — Supabase RLS policies on all tables
+- **Content Security Policy** — Strict CSP headers in production
 
 ## Keyboard Shortcuts
 
@@ -117,7 +124,7 @@ hayai/
 │   ├── terms/             # Terms of service
 │   └── api/               # API routes (Stripe, Auth)
 ├── components/
-│   ├── onboarding/        # Onboarding overlay, spotlight, tooltip
+│   ├── onboarding/        # Pre-intro, overlay, spotlight, tooltip
 │   ├── library/           # Library panel components
 │   ├── sidepanel/         # Side panel for document overview
 │   ├── upload/            # Upload and paste text modals
