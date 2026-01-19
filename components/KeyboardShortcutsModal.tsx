@@ -62,7 +62,7 @@ const allShortcutGroups: ShortcutGroup[] = [
   {
     title: "Navigation",
     shortcuts: [
-      { keys: ["N"], description: "New file (go to upload)" },
+      { keys: ["N"], description: "Go home (upload new file)" },
     ],
     pages: ["reader"],
   },

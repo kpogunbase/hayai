@@ -711,10 +711,18 @@ export default function ReaderPage() {
               e.currentTarget.style.color = "var(--text-secondary)";
             }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
+            {/* Traditional Japanese-style home icon */}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              {/* Main roof - traditional Japanese curved eave style */}
+              <path d="M2 10.5C2 10.5 4 9 12 4C20 9 22 10.5 22 10.5" />
+              {/* Secondary roof layer for depth */}
+              <path d="M4 10V19C4 19.5523 4.44772 20 5 20H19C19.5523 20 20 19.5523 20 19V10" />
+              {/* Entrance/door - traditional style */}
+              <path d="M9 20V14.5C9 14.2239 9.22386 14 9.5 14H14.5C14.7761 14 15 14.2239 15 14.5V20" />
+              {/* Roof overhang detail */}
+              <path d="M3 10.5L12 5.5L21 10.5" strokeWidth="1.5" />
             </svg>
-            {!isMobile && "New file"}
+            {!isMobile && "Home"}
           </button>
 
           {/* Library button */}
