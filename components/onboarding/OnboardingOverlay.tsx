@@ -69,11 +69,12 @@ const STEP_CONFIGS: Record<OnboardingStep, StepConfig> = {
   },
   speed: {
     title: "Adjust your speed",
-    description: "Drag the slider or press Enter when ready to continue.",
+    description: "Gradual Increase is on by default, ramping speed as you read. Toggle it off to manually control WPM.",
     actionLabel: "Got it",
     keyboardHint: "Enter",
     targetSelector: "[data-onboarding='wpm-slider']",
     tooltipPosition: "top",
+    mobileDescription: "Gradual Increase is on, ramping speed as you read. Toggle it off to set your own WPM.",
   },
   shortcuts: {
     title: "Discover more",
