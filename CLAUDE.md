@@ -100,9 +100,11 @@ hayai/
 │   ├── reader/page.tsx       # Reader page
 │   ├── privacy/page.tsx      # Privacy policy
 │   ├── terms/page.tsx        # Terms of service
-│   └── api/
-│       ├── stripe/           # Stripe webhooks
-│       └── auth/             # Auth callbacks
+│   ├── api/
+│   │   ├── feedback/route.ts # Rate-limited feedback submission
+│   │   └── stripe/           # Stripe webhooks (checkout, portal, webhook)
+│   └── auth/
+│       └── callback/route.ts # OAuth callback handler
 ├── components/
 │   ├── onboarding/
 │   │   ├── OnboardingOverlay.tsx    # Main onboarding flow
@@ -335,6 +337,9 @@ interface OnboardingState {
 
 ### Feedback
 - Modal with text input
+- Rate-limited API route (`/api/feedback`)
+- Server-side user validation (prevents user ID spoofing)
+- Content length validation (max 10,000 characters)
 - Submits to Supabase `feedback` table
 
 ---
@@ -443,6 +448,7 @@ npm run lint
 ### HTTP Headers (next.config.js)
 - **Strict-Transport-Security**: Forces HTTPS with preload
 - **Content-Security-Policy**: Restricts script/style/connect sources
+  - `'unsafe-eval'` only enabled in development mode (removed in production builds)
 - **X-Frame-Options**: Prevents clickjacking (SAMEORIGIN)
 - **X-Content-Type-Options**: Prevents MIME sniffing
 - **Referrer-Policy**: Limits referrer information
@@ -455,6 +461,43 @@ npm run lint
 - Auth callback validates error states before code exchange
 - Session refresh via middleware
 
+### API Security
+- **Rate Limiting**: All API routes protected via Upstash Redis rate limiter
+- **Input Validation**: Server-side validation of all user inputs
+- **URL Validation**: Redirect URLs validated against allowlist (lib/security.ts)
+- **Stripe Webhook Verification**: Signature validation on all webhook requests
+
+### Database Security (Supabase RLS)
+- **Row Level Security**: Enabled on all tables
+- **Feedback**: User ID validated server-side; rate-limited API route prevents spam
+- **Profiles**: Readable only by authenticated users (prevents enumeration)
+- **Subscriptions/Usage**: Users can only access their own data
+- **Storage (Avatars)**: Users can only upload/modify files in their own path
+
+### Security Migrations
+Database security policies are defined in `supabase/migrations/`:
+- `001_subscriptions_and_usage.sql`: Base RLS policies
+- `002_profiles.sql`: Profile table with authentication
+- `003_feedback.sql`: Feedback table setup
+- `004_security_hardening.sql`: Security fixes including:
+  - Secure feedback RLS (validates user_id matches auth.uid())
+  - Restricted profile visibility to authenticated users
+  - Avatar storage bucket policies
+  - Content length constraints (10K char limit)
+
+### Security Regression Tests
+Automated tests in `__tests__/lib/security-regression.test.ts` verify:
+- Environment variable handling (.env in .gitignore)
+- Security headers configuration
+- API route authentication
+- Input validation
+- URL validation with domain allowlist
+- XSS prevention (no dangerouslySetInnerHTML)
+- CSP does not include unsafe-eval in production
+- Feedback API rate limiting and server-side validation
+- Database RLS policy correctness
+- Storage bucket policies
+
 ---
 
 ## Testing
@@ -464,6 +507,19 @@ npm run lint
 - `orpIndex()` - ORP position
 - `getChallengeWpm()` - ramp function
 - `getGradualWpm()` - stage calculation
+
+### Security Regression Tests
+Located in `__tests__/lib/security-regression.test.ts`:
+- Environment variable protection
+- HTTP security headers
+- API authentication checks
+- Input validation
+- XSS prevention
+- CSP configuration
+- Database RLS policies
+- Rate limiting
+
+Run with: `npm test -- --testPathPatterns="security-regression"`
 
 ### Integration
 - File upload → parse → tokenize → display

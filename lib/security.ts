@@ -3,10 +3,18 @@
  */
 
 // Allowed redirect domains
+// SECURITY: Only allow redirects to trusted domains
 const ALLOWED_REDIRECT_DOMAINS = [
+  // Stripe payment domains
   "checkout.stripe.com",
   "billing.stripe.com",
+  // Production domains
   "readhayai.com",
+  "www.readhayai.com",
+  "hayai.vercel.app",
+  "makeamericareadagain.ai",
+  "www.makeamericareadagain.ai",
+  // Development
   "localhost",
 ];
 

@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { useAuth } from "@/components/AuthProvider";
 import { useIsMobile } from "@/lib/hooks/useIsMobile";
 
 interface FeedbackModalProps {
@@ -15,8 +13,8 @@ export function FeedbackModal({ isOpen, onClose, page }: FeedbackModalProps) {
   const [feedback, setFeedback] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { session } = useAuth();
   const isMobile = useIsMobile();
 
   // Focus textarea when modal opens
@@ -33,6 +31,7 @@ export function FeedbackModal({ isOpen, onClose, page }: FeedbackModalProps) {
     if (!isOpen) {
       setFeedback("");
       setSubmitStatus("idle");
+      setErrorMessage(null);
     }
   }, [isOpen]);
 
@@ -41,18 +40,27 @@ export function FeedbackModal({ isOpen, onClose, page }: FeedbackModalProps) {
 
     setIsSubmitting(true);
     setSubmitStatus("idle");
+    setErrorMessage(null);
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase.from("feedback").insert({
-        user_id: session?.user?.id || null,
-        content: feedback.trim(),
-        page: page,
+      // SECURITY: Use API route for rate-limited, server-validated feedback submission
+      const response = await fetch("/api/feedback", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content: feedback.trim(),
+          page: page,
+        }),
       });
 
-      if (error) {
-        console.error("Error submitting feedback:", error);
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Error submitting feedback:", data.error);
         setSubmitStatus("error");
+        setErrorMessage(data.error || "Failed to submit feedback");
       } else {
         setSubmitStatus("success");
         setTimeout(() => {
@@ -62,10 +70,11 @@ export function FeedbackModal({ isOpen, onClose, page }: FeedbackModalProps) {
     } catch (err) {
       console.error("Error submitting feedback:", err);
       setSubmitStatus("error");
+      setErrorMessage("Network error. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
-  }, [feedback, isSubmitting, session, page, onClose]);
+  }, [feedback, isSubmitting, page, onClose]);
 
   // Handle keyboard shortcuts
   const handleKeyDown = useCallback(
@@ -273,7 +282,7 @@ export function FeedbackModal({ isOpen, onClose, page }: FeedbackModalProps) {
                 textAlign: "center",
               }}
             >
-              Failed to submit feedback. Please try again.
+              {errorMessage || "Failed to submit feedback. Please try again."}
             </div>
           )}
         </div>

@@ -1,12 +1,15 @@
 const { withSentryConfig } = require("@sentry/nextjs");
 
 // Build Content Security Policy
+const isDev = process.env.NODE_ENV === "development";
+
 const cspDirectives = {
   "default-src": ["'self'"],
   "script-src": [
     "'self'",
     "'unsafe-inline'", // Required for Next.js
-    "'unsafe-eval'", // Required for Next.js dev mode, consider removing in production
+    // 'unsafe-eval' only in development - NEVER in production (security risk)
+    ...(isDev ? ["'unsafe-eval'"] : []),
     "https://*.supabase.co",
     "https://accounts.google.com",
     "https://*.sentry.io",
