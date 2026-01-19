@@ -10,6 +10,9 @@ interface PasteTextModalProps {
   isLoading?: boolean;
 }
 
+const MIN_WORDS = 10;
+const MAX_CHARS = 500000; // 500KB of text
+
 export function PasteTextModal({
   isOpen,
   onClose,
@@ -18,6 +21,8 @@ export function PasteTextModal({
 }: PasteTextModalProps) {
   const [text, setText] = useState("");
   const [title, setTitle] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isPasting, setIsPasting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isMobile = useIsMobile();
 
@@ -35,25 +40,103 @@ export function PasteTextModal({
     if (!isOpen) {
       setText("");
       setTitle("");
+      setError(null);
+      setIsPasting(false);
     }
   }, [isOpen]);
 
   // Calculate word count
   const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
 
+  // Validate text input
+  const validateText = useCallback((input: string): string | null => {
+    const trimmed = input.trim();
+
+    if (!trimmed) {
+      return "Please enter or paste some text to read.";
+    }
+
+    if (trimmed.length > MAX_CHARS) {
+      const charCount = (trimmed.length / 1000).toFixed(0);
+      return `Text is too long (${charCount}K characters). Maximum is 500K characters.`;
+    }
+
+    const words = trimmed.split(/\s+/).filter(w => w.length > 0);
+    if (words.length < MIN_WORDS) {
+      return `Please enter at least ${MIN_WORDS} words. Current: ${words.length} word${words.length === 1 ? "" : "s"}.`;
+    }
+
+    return null;
+  }, []);
+
+  // Handle text change with validation
+  const handleTextChange = useCallback((newText: string) => {
+    setText(newText);
+    // Clear error when user starts typing
+    if (error) {
+      setError(null);
+    }
+  }, [error]);
+
+  // Handle paste from clipboard (mobile-friendly)
+  const handlePasteFromClipboard = useCallback(async () => {
+    setIsPasting(true);
+    setError(null);
+
+    try {
+      // Check if clipboard API is available
+      if (!navigator.clipboard || !navigator.clipboard.readText) {
+        setError("Clipboard access not available. Please paste manually using your device's paste function.");
+        return;
+      }
+
+      const clipboardText = await navigator.clipboard.readText();
+
+      if (!clipboardText || !clipboardText.trim()) {
+        setError("Clipboard is empty. Copy some text first, then try again.");
+        return;
+      }
+
+      setText(prev => prev + clipboardText);
+      textareaRef.current?.focus();
+    } catch (err) {
+      console.error("Clipboard read error:", err);
+      // Handle common clipboard errors
+      if (err instanceof Error) {
+        if (err.name === "NotAllowedError") {
+          setError("Clipboard access denied. Please paste manually using long-press or Ctrl/Cmd+V.");
+        } else if (err.name === "SecurityError") {
+          setError("Clipboard access blocked by browser. Please paste manually.");
+        } else {
+          setError("Could not read clipboard. Please paste manually using long-press or Ctrl/Cmd+V.");
+        }
+      } else {
+        setError("Could not read clipboard. Please paste manually.");
+      }
+    } finally {
+      setIsPasting(false);
+    }
+  }, []);
+
   // Handle submit
   const handleSubmit = useCallback(() => {
-    if (text.trim() && !isLoading) {
-      const finalTitle =
-        title.trim() ||
-        `Pasted Text - ${new Date().toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })}`;
-      onSubmit(text.trim(), finalTitle);
+    if (isLoading) return;
+
+    const validationError = validateText(text);
+    if (validationError) {
+      setError(validationError);
+      return;
     }
-  }, [text, title, isLoading, onSubmit]);
+
+    const finalTitle =
+      title.trim() ||
+      `Pasted Text - ${new Date().toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })}`;
+    onSubmit(text.trim(), finalTitle);
+  }, [text, title, isLoading, onSubmit, validateText]);
 
   // Handle keyboard shortcuts
   const handleKeyDown = useCallback(

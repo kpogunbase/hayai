@@ -40,15 +40,25 @@ export function createClient(): SupabaseClient {
             eq: () => ({
               single: async () => ({ data: null, error: null }),
             }),
+            neq: () => ({
+              single: async () => ({ data: null, error: null }),
+            }),
             single: async () => ({ data: null, error: null }),
           }),
         }),
         insert: async () => ({ data: null, error: { message: "Supabase not configured. Missing environment variables.", code: "CONFIG_ERROR" } }),
-        upsert: async () => ({ data: null, error: null }),
+        upsert: async () => ({ data: null, error: { message: "Supabase not configured. Missing environment variables.", code: "CONFIG_ERROR" } }),
         update: () => ({
           eq: async () => ({ data: null, error: null }),
         }),
       }),
+      storage: {
+        from: () => ({
+          upload: async () => ({ data: null, error: { message: "Storage not configured. Please configure Supabase storage.", statusCode: "CONFIG_ERROR" } }),
+          getPublicUrl: () => ({ data: { publicUrl: "" } }),
+          remove: async () => ({ data: null, error: null }),
+        }),
+      },
     } as unknown as SupabaseClient;
   }
 

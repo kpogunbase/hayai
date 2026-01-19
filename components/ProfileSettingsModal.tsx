@@ -17,6 +17,7 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -74,24 +75,34 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
-    setIsSaving(true);
+    setIsUploadingAvatar(true);
     setError(null);
+    setSuccess(null);
 
-    const result = await uploadAvatar(user.id, file);
+    try {
+      const result = await uploadAvatar(user.id, file);
 
-    if (result.url) {
-      setAvatarUrl(result.url);
-      // Auto-save the new avatar
-      await upsertProfile(user.id, { avatar_url: result.url });
-      setSuccess("Avatar updated");
-    } else {
-      setError(result.error || "Failed to upload avatar");
-    }
-
-    setIsSaving(false);
-    // Reset input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+      if (result.url) {
+        setAvatarUrl(result.url);
+        // Auto-save the new avatar
+        const saveResult = await upsertProfile(user.id, { avatar_url: result.url });
+        if (saveResult.success) {
+          setSuccess("Avatar updated successfully");
+        } else {
+          setError(saveResult.error || "Avatar uploaded but failed to save to profile");
+        }
+      } else {
+        setError(result.error || "Failed to upload avatar");
+      }
+    } catch (err) {
+      console.error("Avatar upload error:", err);
+      setError("An unexpected error occurred while uploading your avatar");
+    } finally {
+      setIsUploadingAvatar(false);
+      // Reset input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
@@ -202,7 +213,7 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
               {/* Avatar */}
               <div style={{ textAlign: "center", marginBottom: "24px" }}>
                 <div
-                  onClick={handleAvatarClick}
+                  onClick={isUploadingAvatar ? undefined : handleAvatarClick}
                   style={{
                     width: "96px",
                     height: "96px",
@@ -215,55 +226,83 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    cursor: "pointer",
+                    cursor: isUploadingAvatar ? "wait" : "pointer",
                     position: "relative",
                     transition: "opacity 0.15s",
+                    opacity: isUploadingAvatar ? 0.6 : 1,
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.opacity = "0.8";
+                    if (!isUploadingAvatar) {
+                      e.currentTarget.style.opacity = "0.8";
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.opacity = "1";
+                    if (!isUploadingAvatar) {
+                      e.currentTarget.style.opacity = "1";
+                    }
                   }}
                 >
-                  {!avatarUrl && (
+                  {isUploadingAvatar ? (
+                    <div
+                      style={{
+                        width: "32px",
+                        height: "32px",
+                        border: "3px solid rgba(255,255,255,0.3)",
+                        borderTopColor: "#fff",
+                        borderRadius: "50%",
+                        animation: "spin 1s linear infinite",
+                      }}
+                    />
+                  ) : !avatarUrl ? (
                     <span style={{ fontSize: "36px", fontWeight: 600, color: "#fff" }}>
                       {initial}
                     </span>
+                  ) : null}
+                  {!isUploadingAvatar && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: 0,
+                        right: 0,
+                        width: "28px",
+                        height: "28px",
+                        backgroundColor: "var(--bg-primary)",
+                        borderRadius: "50%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: "2px solid var(--bg-primary)",
+                        boxShadow: "0 2px 4px var(--shadow)",
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                        <circle cx="12" cy="13" r="4" />
+                      </svg>
+                    </div>
                   )}
-                  <div
-                    style={{
-                      position: "absolute",
-                      bottom: 0,
-                      right: 0,
-                      width: "28px",
-                      height: "28px",
-                      backgroundColor: "var(--bg-primary)",
-                      borderRadius: "50%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      border: "2px solid var(--bg-primary)",
-                      boxShadow: "0 2px 4px var(--shadow)",
-                    }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2">
-                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                      <circle cx="12" cy="13" r="4" />
-                    </svg>
-                  </div>
                 </div>
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
                   onChange={handleFileChange}
+                  disabled={isUploadingAvatar}
                   style={{ display: "none" }}
                 />
                 <p style={{ fontSize: "13px", color: "var(--text-tertiary)", margin: 0 }}>
-                  Click to upload a photo
+                  {isUploadingAvatar ? "Uploading..." : "Click to upload a photo"}
+                </p>
+                <p style={{ fontSize: "11px", color: "var(--text-tertiary)", margin: "4px 0 0", opacity: 0.7 }}>
+                  JPEG, PNG, GIF, or WebP (max 2MB)
                 </p>
               </div>
+
+              <style jsx>{`
+                @keyframes spin {
+                  to { transform: rotate(360deg); }
+                }
+              `}</style>
 
               {/* Username */}
               <div style={{ marginBottom: "20px" }}>
