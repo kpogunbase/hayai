@@ -91,22 +91,26 @@ const setStoredStatus = (status: { completed: boolean; skipped: boolean; complet
   }
 };
 
+// Check status immediately on module load for instant initialization
+const initialStatus = typeof window !== 'undefined' ? getStoredStatus() : null;
+const initialHasCompleted = initialStatus?.completed || initialStatus?.skipped || false;
+
 export const useOnboardingStore = create<OnboardingState>((set, get) => ({
-  // Initial state
-  isActive: false,
+  // Initial state - set immediately based on stored status
+  isActive: !initialHasCompleted,
   currentStep: 'welcome',
-  hasCompletedOnboarding: false,
-  isLoading: true,
-  showIntro: false,
+  hasCompletedOnboarding: initialHasCompleted,
+  isLoading: false, // No loading delay - we check localStorage synchronously
+  showIntro: !initialHasCompleted, // Show intro immediately for new users
   showStepCelebration: false,
   celebrationMessage: '',
   targetRef: null,
 
-  // Initialize from storage
+  // Initialize from storage (called to ensure hydration matches)
   initialize: async () => {
     const stored = getStoredStatus();
     if (stored?.completed || stored?.skipped) {
-      set({ hasCompletedOnboarding: true, isLoading: false });
+      set({ hasCompletedOnboarding: true, isActive: false, showIntro: false, isLoading: false });
     } else {
       // New user - show intro first, then onboarding
       set({ isActive: true, showIntro: true, isLoading: false });

@@ -3,6 +3,10 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { RsvpWord } from "@/components/RsvpWord";
 
+// Audio configuration
+const FOCUS_TRACK_SRC = "/audio/focus-2.mp3";
+const FADE_DURATION = 1500; // 1.5 seconds fade out
+
 // Intro script - designed to be read at increasing speeds
 const INTRO_SEGMENTS = [
   {
@@ -85,27 +89,49 @@ export function PreOnboardingIntro({ onComplete }: PreOnboardingIntroProps) {
   const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [currentWord, setCurrentWord] = useState("");
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(true); // Start visible immediately
   const [showSkip, setShowSkip] = useState(false);
   const [progress, setProgress] = useState(0);
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(Date.now());
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const totalDuration = 30000; // 30 seconds total
 
   // Calculate all tokens for current segment
   const currentSegment = INTRO_SEGMENTS[currentSegmentIndex];
   const tokens = currentSegment ? tokenize(currentSegment.text) : [];
 
-  // Fade in on mount
+  // Initialize audio and start immediately
   useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), 100);
-    const skipTimer = setTimeout(() => setShowSkip(true), 3000);
+    // Create and configure audio element
+    const audio = new Audio(FOCUS_TRACK_SRC);
+    audio.loop = true;
+    audio.volume = 0.35;
+    audioRef.current = audio;
+
+    // Start playing immediately
+    audio.play().catch(() => {
+      // Audio autoplay might be blocked - that's okay
+    });
+
+    // Show skip button after 2 seconds
+    const skipTimer = setTimeout(() => setShowSkip(true), 2000);
     startTimeRef.current = Date.now();
 
+    // Start the first word immediately
+    const firstTokens = tokenize(INTRO_SEGMENTS[0].text);
+    if (firstTokens.length > 0) {
+      setCurrentWord(firstTokens[0]);
+    }
+
     return () => {
-      clearTimeout(timer);
       clearTimeout(skipTimer);
+      // Clean up audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = "";
+      }
     };
   }, []);
 
@@ -119,10 +145,46 @@ export function PreOnboardingIntro({ onComplete }: PreOnboardingIntroProps) {
     return () => clearInterval(progressInterval);
   }, []);
 
+  // Fade out audio then call onComplete
+  const fadeOutAndComplete = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    const audio = audioRef.current;
+    if (audio && audio.volume > 0) {
+      // Fade out audio over FADE_DURATION
+      const startVolume = audio.volume;
+      const steps = 30;
+      const stepDuration = FADE_DURATION / steps;
+      const volumeStep = startVolume / steps;
+      let currentStep = 0;
+
+      const fadeInterval = setInterval(() => {
+        currentStep++;
+        const newVolume = Math.max(0, startVolume - (volumeStep * currentStep));
+        audio.volume = newVolume;
+
+        if (currentStep >= steps) {
+          clearInterval(fadeInterval);
+          audio.pause();
+          onComplete();
+        }
+      }, stepDuration);
+    } else {
+      onComplete();
+    }
+  }, [onComplete]);
+
+  // Handle skip
+  const handleSkip = useCallback(() => {
+    fadeOutAndComplete();
+  }, [fadeOutAndComplete]);
+
   // Schedule next word/segment
   const scheduleNext = useCallback(() => {
     if (!currentSegment) {
-      onComplete();
+      fadeOutAndComplete();
       return;
     }
 
@@ -143,20 +205,13 @@ export function PreOnboardingIntro({ onComplete }: PreOnboardingIntroProps) {
             const nextTokens = tokenize(INTRO_SEGMENTS[currentSegmentIndex + 1].text);
             setCurrentWord(nextTokens[0] || "");
           } else {
-            // All segments complete
-            onComplete();
+            // All segments complete - fade out audio and transition
+            fadeOutAndComplete();
           }
         }, currentSegment.pauseAfter);
       }
     }, interval);
-  }, [currentSegment, currentWordIndex, tokens, currentSegmentIndex, onComplete]);
-
-  // Start the sequence
-  useEffect(() => {
-    if (tokens.length > 0 && currentWord === "") {
-      setCurrentWord(tokens[0]);
-    }
-  }, [tokens, currentWord]);
+  }, [currentSegment, currentWordIndex, tokens, currentSegmentIndex, fadeOutAndComplete]);
 
   // Schedule next word when word changes
   useEffect(() => {
@@ -170,14 +225,6 @@ export function PreOnboardingIntro({ onComplete }: PreOnboardingIntroProps) {
       }
     };
   }, [currentWord, scheduleNext]);
-
-  // Handle skip
-  const handleSkip = useCallback(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    onComplete();
-  }, [onComplete]);
 
   // Keyboard handler
   useEffect(() => {
