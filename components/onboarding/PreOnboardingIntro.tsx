@@ -5,69 +5,29 @@ import { RsvpWord } from "@/components/RsvpWord";
 
 // Audio configuration
 const FOCUS_TRACK_SRC = "/audio/focus-2.mp3";
-const FADE_DURATION = 1500; // 1.5 seconds fade out
+const FADE_DURATION = 500; // 0.5 seconds fade out
 
-// Intro script - designed to be read at increasing speeds
+// Intro script - short and punchy (~5 seconds total)
 const INTRO_SEGMENTS = [
   {
-    text: "Ever wanted to read faster?",
-    wpm: 200,
-    pauseAfter: 800,
-  },
-  {
-    text: "What if you could double your reading speed?",
-    wpm: 250,
-    pauseAfter: 600,
-  },
-  {
-    text: "Or even triple it?",
+    text: "Read faster.",
     wpm: 300,
-    pauseAfter: 800,
+    pauseAfter: 300,
   },
   {
-    text: "Introducing Rapid Serial Visual Presentation.",
-    wpm: 280,
-    pauseAfter: 500,
+    text: "One word at a time.",
+    wpm: 400,
+    pauseAfter: 200,
   },
   {
-    text: "RSVP displays one word at a time at your chosen speed.",
-    wpm: 320,
-    pauseAfter: 400,
-  },
-  {
-    text: "Your eyes stay fixed. No scanning. No backtracking.",
-    wpm: 350,
-    pauseAfter: 400,
-  },
-  {
-    text: "Just pure, focused reading.",
-    wpm: 300,
-    pauseAfter: 600,
-  },
-  {
-    text: "The average person reads 200 to 250 words per minute.",
+    text: "This is Hayai.",
     wpm: 350,
     pauseAfter: 300,
   },
   {
-    text: "With practice, you can reach 500, 600, even 900 words per minute.",
-    wpm: 400,
-    pauseAfter: 400,
-  },
-  {
-    text: "This is Hayai.",
-    wpm: 250,
-    pauseAfter: 500,
-  },
-  {
-    text: "Fast in Japanese.",
-    wpm: 280,
-    pauseAfter: 600,
-  },
-  {
     text: "Let's begin.",
-    wpm: 200,
-    pauseAfter: 1000,
+    wpm: 300,
+    pauseAfter: 400,
   },
 ];
 
@@ -96,7 +56,7 @@ export function PreOnboardingIntro({ onComplete }: PreOnboardingIntroProps) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(Date.now());
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const totalDuration = 30000; // 30 seconds total
+  const totalDuration = 5000; // ~5 seconds total
 
   // Calculate all tokens for current segment
   const currentSegment = INTRO_SEGMENTS[currentSegmentIndex];
@@ -115,8 +75,8 @@ export function PreOnboardingIntro({ onComplete }: PreOnboardingIntroProps) {
       // Audio autoplay might be blocked - that's okay
     });
 
-    // Show skip button after 2 seconds
-    const skipTimer = setTimeout(() => setShowSkip(true), 2000);
+    // Show skip button after 1 second
+    const skipTimer = setTimeout(() => setShowSkip(true), 1000);
     startTimeRef.current = Date.now();
 
     // Start the first word immediately
