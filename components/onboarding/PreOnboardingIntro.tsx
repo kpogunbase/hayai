@@ -86,74 +86,30 @@ interface PreOnboardingIntroProps {
 }
 
 export function PreOnboardingIntro({ onComplete }: PreOnboardingIntroProps) {
-  const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
-  const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [currentWord, setCurrentWord] = useState("");
-  const [isVisible, setIsVisible] = useState(true); // Start visible immediately
+  const [currentWpm, setCurrentWpm] = useState(INTRO_SEGMENTS[0].wpm);
+  const [isVisible, setIsVisible] = useState(true);
   const [showSkip, setShowSkip] = useState(false);
   const [progress, setProgress] = useState(0);
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(Date.now());
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const totalDuration = 30000; // 30 seconds total
-
-  // Calculate all tokens for current segment
-  const currentSegment = INTRO_SEGMENTS[currentSegmentIndex];
-  const tokens = currentSegment ? tokenize(currentSegment.text) : [];
-
-  // Initialize audio and start immediately
-  useEffect(() => {
-    // Create and configure audio element
-    const audio = new Audio(FOCUS_TRACK_SRC);
-    audio.loop = true;
-    audio.volume = 0.35;
-    audioRef.current = audio;
-
-    // Start playing immediately
-    audio.play().catch(() => {
-      // Audio autoplay might be blocked - that's okay
-    });
-
-    // Show skip button after 2 seconds
-    const skipTimer = setTimeout(() => setShowSkip(true), 2000);
-    startTimeRef.current = Date.now();
-
-    // Start the first word immediately
-    const firstTokens = tokenize(INTRO_SEGMENTS[0].text);
-    if (firstTokens.length > 0) {
-      setCurrentWord(firstTokens[0]);
-    }
-
-    return () => {
-      clearTimeout(skipTimer);
-      // Clean up audio
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = "";
-      }
-    };
-  }, []);
-
-  // Update progress bar
-  useEffect(() => {
-    const progressInterval = setInterval(() => {
-      const elapsed = Date.now() - startTimeRef.current;
-      setProgress(Math.min((elapsed / totalDuration) * 100, 100));
-    }, 100);
-
-    return () => clearInterval(progressInterval);
-  }, []);
+  const isCompletedRef = useRef(false);
+  const totalDuration = 30000;
 
   // Fade out audio then call onComplete
   const fadeOutAndComplete = useCallback(() => {
+    if (isCompletedRef.current) return;
+    isCompletedRef.current = true;
+
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
 
     const audio = audioRef.current;
     if (audio && audio.volume > 0) {
-      // Fade out audio over FADE_DURATION
       const startVolume = audio.volume;
       const steps = 30;
       const stepDuration = FADE_DURATION / steps;
@@ -162,7 +118,7 @@ export function PreOnboardingIntro({ onComplete }: PreOnboardingIntroProps) {
 
       const fadeInterval = setInterval(() => {
         currentStep++;
-        const newVolume = Math.max(0, startVolume - (volumeStep * currentStep));
+        const newVolume = Math.max(0, startVolume - volumeStep * currentStep);
         audio.volume = newVolume;
 
         if (currentStep >= steps) {
@@ -181,50 +137,100 @@ export function PreOnboardingIntro({ onComplete }: PreOnboardingIntroProps) {
     fadeOutAndComplete();
   }, [fadeOutAndComplete]);
 
-  // Schedule next word/segment
-  const scheduleNext = useCallback(() => {
-    if (!currentSegment) {
-      fadeOutAndComplete();
-      return;
-    }
-
-    const interval = getInterval(currentSegment.wpm);
-
-    timeoutRef.current = setTimeout(() => {
-      if (currentWordIndex < tokens.length - 1) {
-        // Next word in segment
-        setCurrentWordIndex((prev) => prev + 1);
-        setCurrentWord(tokens[currentWordIndex + 1]);
-        scheduleNext();
-      } else {
-        // End of segment - pause then move to next
-        setTimeout(() => {
-          if (currentSegmentIndex < INTRO_SEGMENTS.length - 1) {
-            setCurrentSegmentIndex((prev) => prev + 1);
-            setCurrentWordIndex(0);
-            const nextTokens = tokenize(INTRO_SEGMENTS[currentSegmentIndex + 1].text);
-            setCurrentWord(nextTokens[0] || "");
-          } else {
-            // All segments complete - fade out audio and transition
-            fadeOutAndComplete();
-          }
-        }, currentSegment.pauseAfter);
-      }
-    }, interval);
-  }, [currentSegment, currentWordIndex, tokens, currentSegmentIndex, fadeOutAndComplete]);
-
-  // Schedule next word when word changes
+  // Main playback loop - runs once on mount
   useEffect(() => {
-    if (currentWord) {
-      scheduleNext();
+    // Create and configure audio element
+    const audio = new Audio(FOCUS_TRACK_SRC);
+    audio.loop = true;
+    audio.volume = 0.35;
+    audioRef.current = audio;
+
+    // Start playing immediately
+    audio.play().catch(() => {
+      // Audio autoplay might be blocked - that's okay
+    });
+
+    // Show skip button after 2 seconds
+    const skipTimer = setTimeout(() => setShowSkip(true), 2000);
+    startTimeRef.current = Date.now();
+
+    // Build flat list of all words with their timing
+    interface WordItem {
+      word: string;
+      wpm: number;
+      pauseAfter: number;
+      isLastInSegment: boolean;
     }
+
+    const allWords: WordItem[] = [];
+    for (const segment of INTRO_SEGMENTS) {
+      const words = tokenize(segment.text);
+      words.forEach((word, i) => {
+        allWords.push({
+          word,
+          wpm: segment.wpm,
+          pauseAfter: i === words.length - 1 ? segment.pauseAfter : 0,
+          isLastInSegment: i === words.length - 1,
+        });
+      });
+    }
+
+    // Start with first word immediately
+    if (allWords.length > 0) {
+      setCurrentWord(allWords[0].word);
+      setCurrentWpm(allWords[0].wpm);
+    }
+
+    // Schedule all subsequent words
+    let wordIndex = 0;
+
+    const scheduleNextWord = () => {
+      if (isCompletedRef.current) return;
+
+      const current = allWords[wordIndex];
+      const interval = getInterval(current.wpm);
+      const totalDelay = interval + current.pauseAfter;
+
+      timeoutRef.current = setTimeout(() => {
+        wordIndex++;
+
+        if (wordIndex >= allWords.length) {
+          // All done
+          fadeOutAndComplete();
+          return;
+        }
+
+        const next = allWords[wordIndex];
+        setCurrentWord(next.word);
+        setCurrentWpm(next.wpm);
+        scheduleNextWord();
+      }, totalDelay);
+    };
+
+    // Start the scheduler after displaying first word
+    scheduleNextWord();
 
     return () => {
+      clearTimeout(skipTimer);
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = "";
+      }
     };
-  }, [currentWord, scheduleNext]);
+  }, [fadeOutAndComplete]);
+
+  // Update progress bar
+  useEffect(() => {
+    const progressInterval = setInterval(() => {
+      const elapsed = Date.now() - startTimeRef.current;
+      setProgress(Math.min((elapsed / totalDuration) * 100, 100));
+    }, 100);
+
+    return () => clearInterval(progressInterval);
+  }, []);
 
   // Keyboard handler
   useEffect(() => {
@@ -300,20 +306,18 @@ export function PreOnboardingIntro({ onComplete }: PreOnboardingIntroProps) {
       </div>
 
       {/* Current WPM indicator */}
-      {currentSegment && (
-        <div
-          style={{
-            position: "absolute",
-            bottom: "100px",
-            fontSize: "14px",
-            fontWeight: 500,
-            color: "rgba(255, 255, 255, 0.4)",
-            fontVariantNumeric: "tabular-nums",
-          }}
-        >
-          {currentSegment.wpm} WPM
-        </div>
-      )}
+      <div
+        style={{
+          position: "absolute",
+          bottom: "100px",
+          fontSize: "14px",
+          fontWeight: 500,
+          color: "rgba(255, 255, 255, 0.4)",
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
+        {currentWpm} WPM
+      </div>
 
       {/* Skip button */}
       {showSkip && (
