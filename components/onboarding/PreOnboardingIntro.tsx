@@ -96,7 +96,13 @@ export function PreOnboardingIntro({ onComplete }: PreOnboardingIntroProps) {
   const startTimeRef = useRef<number>(Date.now());
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const isCompletedRef = useRef(false);
+  const onCompleteRef = useRef(onComplete);
   const totalDuration = 30000;
+
+  // Keep onComplete ref updated
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   // Fade out audio then call onComplete
   const fadeOutAndComplete = useCallback(() => {
@@ -124,13 +130,13 @@ export function PreOnboardingIntro({ onComplete }: PreOnboardingIntroProps) {
         if (currentStep >= steps) {
           clearInterval(fadeInterval);
           audio.pause();
-          onComplete();
+          onCompleteRef.current();
         }
       }, stepDuration);
     } else {
-      onComplete();
+      onCompleteRef.current();
     }
-  }, [onComplete]);
+  }, []);
 
   // Handle skip
   const handleSkip = useCallback(() => {
@@ -146,8 +152,8 @@ export function PreOnboardingIntro({ onComplete }: PreOnboardingIntroProps) {
     audioRef.current = audio;
 
     // Start playing immediately
-    audio.play().catch(() => {
-      // Audio autoplay might be blocked - that's okay
+    audio.play().catch((err) => {
+      console.log("Audio autoplay blocked:", err);
     });
 
     // Show skip button after 2 seconds
@@ -215,12 +221,14 @@ export function PreOnboardingIntro({ onComplete }: PreOnboardingIntroProps) {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
-      if (audioRef.current) {
+      // Clean up audio on unmount (only if not already completed)
+      if (audioRef.current && !isCompletedRef.current) {
         audioRef.current.pause();
         audioRef.current.src = "";
       }
     };
-  }, [fadeOutAndComplete]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - run once on mount
 
   // Update progress bar
   useEffect(() => {
