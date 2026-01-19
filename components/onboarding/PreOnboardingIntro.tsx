@@ -7,7 +7,7 @@ import { RsvpWord } from "@/components/RsvpWord";
 const FOCUS_TRACK_SRC = "/audio/focus-2.mp3";
 const FADE_DURATION = 1500; // 1.5 seconds fade out
 
-// Intro script - designed to be read at increasing speeds
+// Intro script - starts at 200 WPM, gradually increases to 600 WPM
 const INTRO_SEGMENTS = [
   {
     text: "Ever wanted to read faster?",
@@ -26,47 +26,42 @@ const INTRO_SEGMENTS = [
   },
   {
     text: "Introducing Rapid Serial Visual Presentation.",
-    wpm: 280,
+    wpm: 350,
     pauseAfter: 500,
   },
   {
     text: "RSVP displays one word at a time at your chosen speed.",
-    wpm: 320,
-    pauseAfter: 400,
-  },
-  {
-    text: "Your eyes stay fixed. No scanning. No backtracking.",
-    wpm: 350,
-    pauseAfter: 400,
-  },
-  {
-    text: "Just pure, focused reading.",
-    wpm: 300,
-    pauseAfter: 600,
-  },
-  {
-    text: "The average person reads 200 to 250 words per minute.",
-    wpm: 350,
-    pauseAfter: 300,
-  },
-  {
-    text: "With practice, you can reach 500, 600, even 900 words per minute.",
     wpm: 400,
     pauseAfter: 400,
   },
   {
-    text: "This is Hayai.",
-    wpm: 250,
-    pauseAfter: 500,
+    text: "Your eyes stay fixed. No scanning. No backtracking.",
+    wpm: 450,
+    pauseAfter: 400,
   },
   {
-    text: "Fast in Japanese.",
-    wpm: 280,
+    text: "Just pure, focused reading.",
+    wpm: 500,
     pauseAfter: 600,
   },
   {
+    text: "The average person reads 200 to 250 words per minute.",
+    wpm: 520,
+    pauseAfter: 300,
+  },
+  {
+    text: "With practice, you can reach 500, 600, even 900 words per minute.",
+    wpm: 550,
+    pauseAfter: 400,
+  },
+  {
+    text: "This is Hayai.",
+    wpm: 580,
+    pauseAfter: 500,
+  },
+  {
     text: "Let's begin.",
-    wpm: 200,
+    wpm: 600,
     pauseAfter: 1000,
   },
 ];
