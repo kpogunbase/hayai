@@ -711,16 +711,19 @@ export default function ReaderPage() {
               e.currentTarget.style.color = "var(--text-secondary)";
             }}
           >
-            {/* Traditional Japanese-style home icon */}
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-              {/* Main roof - traditional Japanese curved eave style */}
-              <path d="M2 10.5C2 10.5 4 9 12 4C20 9 22 10.5 22 10.5" />
-              {/* Secondary roof layer for depth */}
-              <path d="M4 10V19C4 19.5523 4.44772 20 5 20H19C19.5523 20 20 19.5523 20 19V10" />
-              {/* Entrance/door - traditional style */}
-              <path d="M9 20V14.5C9 14.2239 9.22386 14 9.5 14H14.5C14.7761 14 15 14.2239 15 14.5V20" />
-              {/* Roof overhang detail */}
-              <path d="M3 10.5L12 5.5L21 10.5" strokeWidth="1.5" />
+            {/* Japanese temple/shrine style home icon - distinctive curved eaves */}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              {/* Upper decorative roof tier - curved upward at edges (temple style) */}
+              <path d="M4 9C2.5 9.5 2 10 2 10L12 5L22 10C22 10 21.5 9.5 20 9" />
+              {/* Main roof with dramatic curved eaves sweeping upward */}
+              <path d="M1 12.5Q4 11 5 11.5L12 7L19 11.5Q20 11 23 12.5" />
+              {/* House body */}
+              <path d="M5 12V19.5C5 19.78 5.22 20 5.5 20H18.5C18.78 20 19 19.78 19 19.5V12" />
+              {/* Traditional shoji door frame */}
+              <rect x="9" y="14" width="6" height="6" rx="0.5" />
+              {/* Shoji door cross pattern */}
+              <line x1="12" y1="14" x2="12" y2="20" />
+              <line x1="9" y1="17" x2="15" y2="17" />
             </svg>
             {!isMobile && "Home"}
           </button>

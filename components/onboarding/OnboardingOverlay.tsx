@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useOnboardingStore, OnboardingStep } from "@/lib/stores/onboardingStore";
 import { OnboardingSpotlight } from "./OnboardingSpotlight";
 import { OnboardingTooltip } from "./OnboardingTooltip";
+import { PreOnboardingIntro } from "./PreOnboardingIntro";
 import { useIsMobile } from "@/lib/hooks/useIsMobile";
 
 // Demo text for onboarding
@@ -102,11 +103,13 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
   const {
     isActive,
     currentStep,
+    showIntro,
     showStepCelebration,
     celebrationMessage,
     nextStep,
     skipOnboarding,
     completeOnboarding,
+    completeIntro,
     reportAction,
   } = useOnboardingStore();
 
@@ -275,6 +278,11 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
   }, [currentStep, nextStep, completeOnboarding, onLoadDemoText, reportAction, isMobile]);
 
   if (!isActive) return null;
+
+  // Show pre-onboarding intro first
+  if (showIntro) {
+    return <PreOnboardingIntro onComplete={completeIntro} />;
+  }
 
   const config = STEP_CONFIGS[currentStep];
   const isFullScreen = currentStep === "welcome" || currentStep === "complete";

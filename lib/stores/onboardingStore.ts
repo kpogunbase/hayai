@@ -40,6 +40,9 @@ interface OnboardingState {
   hasCompletedOnboarding: boolean;
   isLoading: boolean;
 
+  // Pre-onboarding intro state
+  showIntro: boolean;
+
   // Celebration state for step completion
   showStepCelebration: boolean;
   celebrationMessage: string;
@@ -50,6 +53,7 @@ interface OnboardingState {
   // Actions
   initialize: () => Promise<void>;
   startOnboarding: () => void;
+  completeIntro: () => void;
   nextStep: () => void;
   skipOnboarding: () => void;
   completeOnboarding: () => void;
@@ -93,6 +97,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   currentStep: 'welcome',
   hasCompletedOnboarding: false,
   isLoading: true,
+  showIntro: false,
   showStepCelebration: false,
   celebrationMessage: '',
   targetRef: null,
@@ -103,8 +108,8 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     if (stored?.completed || stored?.skipped) {
       set({ hasCompletedOnboarding: true, isLoading: false });
     } else {
-      // New user - start onboarding
-      set({ isActive: true, isLoading: false });
+      // New user - show intro first, then onboarding
+      set({ isActive: true, showIntro: true, isLoading: false });
     }
   },
 
@@ -112,9 +117,15 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   startOnboarding: () => {
     set({
       isActive: true,
+      showIntro: true, // Show intro again on replay
       currentStep: 'welcome',
       showStepCelebration: false,
     });
+  },
+
+  // Complete the intro animation - transition to main onboarding
+  completeIntro: () => {
+    set({ showIntro: false });
   },
 
   // Advance to next step
@@ -160,6 +171,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     localStorage.removeItem(ONBOARDING_KEY);
     set({
       isActive: false,
+      showIntro: false,
       currentStep: 'welcome',
       hasCompletedOnboarding: false,
       showStepCelebration: false,
