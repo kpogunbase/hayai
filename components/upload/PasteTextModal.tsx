@@ -289,21 +289,63 @@ export function PasteTextModal({
 
           {/* Text area */}
           <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-            <label
+            <div
               style={{
-                display: "block",
-                fontSize: "13px",
-                fontWeight: 500,
-                color: "var(--text-secondary)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
                 marginBottom: "6px",
               }}
             >
-              Text content
-            </label>
+              <label
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  color: "var(--text-secondary)",
+                }}
+              >
+                Text content
+              </label>
+              <button
+                onClick={handlePasteFromClipboard}
+                disabled={isPasting}
+                style={{
+                  padding: "4px 10px",
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  color: "var(--text-secondary)",
+                  backgroundColor: "var(--bg-secondary)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "6px",
+                  cursor: isPasting ? "wait" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  opacity: isPasting ? 0.7 : 1,
+                  transition: "all 150ms ease",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isPasting) {
+                    e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isPasting) {
+                    e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
+                  }
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+                {isPasting ? "Pasting..." : "Paste"}
+              </button>
+            </div>
             <textarea
               ref={textareaRef}
               value={text}
-              onChange={(e) => setText(e.target.value)}
+              onChange={(e) => handleTextChange(e.target.value)}
               placeholder="Paste or type your text here..."
               style={{
                 flex: 1,
@@ -338,6 +380,22 @@ export function PasteTextModal({
           >
             {wordCount.toLocaleString()} words
           </div>
+
+          {/* Error message */}
+          {error && (
+            <div
+              style={{
+                padding: "12px 16px",
+                backgroundColor: "rgba(220, 38, 38, 0.1)",
+                border: "1px solid rgba(220, 38, 38, 0.2)",
+                borderRadius: "8px",
+                color: "#dc2626",
+                fontSize: "14px",
+              }}
+            >
+              {error}
+            </div>
+          )}
         </div>
 
         {/* Footer */}
