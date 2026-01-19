@@ -434,6 +434,26 @@ npm run lint
 - Parsing failures: Graceful fallback with error state
 - Audio failures: Silent fail, continues without audio
 - Network errors: Offline-first with IndexedDB
+- Authentication errors: Displayed on homepage with dismissible toast
+
+---
+
+## Security
+
+### HTTP Headers (next.config.js)
+- **Strict-Transport-Security**: Forces HTTPS with preload
+- **Content-Security-Policy**: Restricts script/style/connect sources
+- **X-Frame-Options**: Prevents clickjacking (SAMEORIGIN)
+- **X-Content-Type-Options**: Prevents MIME sniffing
+- **Referrer-Policy**: Limits referrer information
+- **Permissions-Policy**: Disables camera, microphone, geolocation, FLoC
+- **X-XSS-Protection**: Legacy XSS filter enabled
+
+### Authentication Security
+- OAuth 2.0 with PKCE flow (prevents authorization code interception)
+- Secure cookie handling via Supabase SSR
+- Auth callback validates error states before code exchange
+- Session refresh via middleware
 
 ---
 
@@ -471,6 +491,47 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
 # Sentry (optional)
 SENTRY_DSN=your_sentry_dsn
 ```
+
+---
+
+## Authentication Setup (Google OAuth)
+
+Hayai uses Supabase Auth with Google OAuth for user sign-in. To configure:
+
+### Supabase Dashboard
+1. Go to **Authentication > Providers > Google**
+2. Enable Google provider
+3. Add your Google OAuth credentials (Client ID and Secret)
+4. In **Authentication > URL Configuration**:
+   - Set Site URL to your production domain (e.g., `https://hayai.app`)
+   - Add redirect URLs:
+     - `https://your-domain.com/auth/callback`
+     - `http://localhost:3000/auth/callback` (for development)
+
+### Google Cloud Console
+1. Go to **APIs & Services > OAuth consent screen**
+2. Configure the consent screen:
+   - Add app name, support email, developer contact
+   - Add your domain to authorized domains
+   - Add privacy policy URL (`https://your-domain.com/privacy`)
+   - Add terms of service URL (`https://your-domain.com/terms`)
+3. Go to **APIs & Services > Credentials**
+4. Create or edit your OAuth 2.0 Client ID:
+   - Add authorized JavaScript origins:
+     - `https://your-domain.com`
+     - `http://localhost:3000`
+   - Add authorized redirect URIs:
+     - `https://<project-ref>.supabase.co/auth/v1/callback`
+5. **To remove "This app isn't verified" warning**:
+   - Submit your app for verification in OAuth consent screen
+   - Or add test users if app is in "Testing" mode
+
+### Security Features
+- PKCE (Proof Key for Code Exchange) enabled by default
+- Content Security Policy restricts script/connect sources
+- Strict-Transport-Security with preload
+- X-Frame-Options prevents clickjacking
+- Auth callback validates error states and exchanges codes securely
 
 ---
 

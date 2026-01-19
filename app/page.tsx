@@ -103,10 +103,34 @@ function HomePageContent() {
     loadDocuments(user?.id);
   }, [loadDocuments, user?.id]);
 
+  // Auth error state
+  const [authError, setAuthError] = useState<string | null>(null);
+
   // Check for success/canceled from Stripe redirect
   useEffect(() => {
     if (searchParams.get("success") === "true") {
       setShowSuccess(true);
+      window.history.replaceState({}, "", "/");
+    }
+  }, [searchParams]);
+
+  // Check for auth errors from OAuth callback
+  useEffect(() => {
+    const authErrorParam = searchParams.get("auth_error");
+    if (authErrorParam) {
+      const errorDescription = searchParams.get("auth_error_description");
+      let message = "Authentication failed. Please try again.";
+
+      if (authErrorParam === "access_denied") {
+        message = "Sign-in was cancelled or access was denied.";
+      } else if (authErrorParam === "exchange_failed") {
+        message = "Failed to complete sign-in. Please try again.";
+      } else if (errorDescription) {
+        message = decodeURIComponent(errorDescription);
+      }
+
+      setAuthError(message);
+      // Clear the URL params
       window.history.replaceState({}, "", "/");
     }
   }, [searchParams]);
@@ -641,6 +665,39 @@ function HomePageContent() {
           Welcome to Hayai Pro! You now have unlimited uploads.
           <button
             onClick={() => setShowSuccess(false)}
+            style={{
+              marginLeft: "12px",
+              padding: "2px 8px",
+              fontSize: "12px",
+              color: "inherit",
+              backgroundColor: "transparent",
+              border: "1px solid currentColor",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {/* Auth error message */}
+      {authError && (
+        <div
+          style={{
+            margin: "0 24px",
+            padding: "12px 16px",
+            backgroundColor: "rgba(239, 68, 68, 0.1)",
+            border: "1px solid rgba(239, 68, 68, 0.3)",
+            borderRadius: "8px",
+            color: "#ef4444",
+            fontSize: "14px",
+            textAlign: "center",
+          }}
+        >
+          {authError}
+          <button
+            onClick={() => setAuthError(null)}
             style={{
               marginLeft: "12px",
               padding: "2px 8px",

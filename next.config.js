@@ -1,5 +1,43 @@
 const { withSentryConfig } = require("@sentry/nextjs");
 
+// Build Content Security Policy
+const cspDirectives = {
+  "default-src": ["'self'"],
+  "script-src": [
+    "'self'",
+    "'unsafe-inline'", // Required for Next.js
+    "'unsafe-eval'", // Required for Next.js dev mode, consider removing in production
+    "https://*.supabase.co",
+    "https://accounts.google.com",
+    "https://*.sentry.io",
+  ],
+  "style-src": ["'self'", "'unsafe-inline'"], // Required for styled-jsx and inline styles
+  "img-src": ["'self'", "data:", "blob:", "https://*.googleusercontent.com", "https://*.supabase.co"],
+  "font-src": ["'self'"],
+  "connect-src": [
+    "'self'",
+    "https://*.supabase.co",
+    "wss://*.supabase.co",
+    "https://accounts.google.com",
+    "https://oauth2.googleapis.com",
+    "https://*.sentry.io",
+    "https://*.ingest.sentry.io",
+  ],
+  "frame-src": ["'self'", "https://accounts.google.com", "https://*.supabase.co"],
+  "frame-ancestors": ["'self'"],
+  "form-action": ["'self'", "https://accounts.google.com", "https://*.supabase.co"],
+  "base-uri": ["'self'"],
+  "object-src": ["'none'"],
+  "upgrade-insecure-requests": [],
+};
+
+const cspString = Object.entries(cspDirectives)
+  .map(([key, values]) => {
+    if (values.length === 0) return key;
+    return `${key} ${values.join(" ")}`;
+  })
+  .join("; ");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async headers() {
@@ -14,7 +52,7 @@ const nextConfig = {
           },
           {
             key: "Strict-Transport-Security",
-            value: "max-age=31536000; includeSubDomains",
+            value: "max-age=31536000; includeSubDomains; preload",
           },
           {
             key: "X-Frame-Options",
@@ -30,7 +68,15 @@ const nextConfig = {
           },
           {
             key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=()",
+            value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: cspString,
+          },
+          {
+            key: "X-XSS-Protection",
+            value: "1; mode=block",
           },
         ],
       },
