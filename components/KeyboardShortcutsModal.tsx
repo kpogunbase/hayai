@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useMemo } from "react";
+import { useEffect, useCallback, useMemo, useRef } from "react";
 import { useIsMobile } from "@/lib/hooks/useIsMobile";
 
 type PageContext = "home" | "reader";
@@ -114,12 +114,16 @@ const allShortcutGroups: ShortcutGroup[] = [
   },
 ];
 
+// Scroll amount per key press (in pixels)
+const SCROLL_AMOUNT = 80;
+
 export function KeyboardShortcutsModal({
   isOpen,
   onClose,
   page = "reader",
 }: KeyboardShortcutsModalProps) {
   const isMobile = useIsMobile();
+  const contentRef = useRef<HTMLDivElement>(null);
 
   // Filter shortcuts based on page context
   const shortcutGroups = useMemo(() => {
@@ -128,11 +132,53 @@ export function KeyboardShortcutsModal({
     );
   }, [page]);
 
-  // Close on escape
+  // Handle keyboard navigation
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        onClose();
+      if (!isOpen) return;
+
+      switch (e.key) {
+        case "Escape":
+          onClose();
+          break;
+        case "ArrowDown":
+        case "j": // Vim-style navigation
+          e.preventDefault();
+          if (contentRef.current) {
+            contentRef.current.scrollBy({ top: SCROLL_AMOUNT, behavior: "smooth" });
+          }
+          break;
+        case "ArrowUp":
+        case "k": // Vim-style navigation
+          e.preventDefault();
+          if (contentRef.current) {
+            contentRef.current.scrollBy({ top: -SCROLL_AMOUNT, behavior: "smooth" });
+          }
+          break;
+        case "Home":
+          e.preventDefault();
+          if (contentRef.current) {
+            contentRef.current.scrollTo({ top: 0, behavior: "smooth" });
+          }
+          break;
+        case "End":
+          e.preventDefault();
+          if (contentRef.current) {
+            contentRef.current.scrollTo({ top: contentRef.current.scrollHeight, behavior: "smooth" });
+          }
+          break;
+        case "PageDown":
+          e.preventDefault();
+          if (contentRef.current) {
+            contentRef.current.scrollBy({ top: contentRef.current.clientHeight * 0.8, behavior: "smooth" });
+          }
+          break;
+        case "PageUp":
+          e.preventDefault();
+          if (contentRef.current) {
+            contentRef.current.scrollBy({ top: -contentRef.current.clientHeight * 0.8, behavior: "smooth" });
+          }
+          break;
       }
     },
     [isOpen, onClose]
@@ -142,6 +188,13 @@ export function KeyboardShortcutsModal({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
+
+  // Focus content area when modal opens for immediate keyboard access
+  useEffect(() => {
+    if (isOpen && contentRef.current) {
+      contentRef.current.focus();
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -232,10 +285,13 @@ export function KeyboardShortcutsModal({
 
         {/* Content */}
         <div
+          ref={contentRef}
+          tabIndex={0}
           style={{
             padding: "24px",
             maxHeight: "60vh",
             overflowY: "auto",
+            outline: "none",
           }}
         >
           {shortcutGroups.map((group, groupIndex) => (
@@ -325,7 +381,11 @@ export function KeyboardShortcutsModal({
                 textAlign: "center",
               }}
             >
-              Press <kbd style={footerKbdStyle}>?</kbd> anytime to show this help
+              <kbd style={footerKbdStyle}>↑</kbd> <kbd style={footerKbdStyle}>↓</kbd> scroll
+              {" · "}
+              <kbd style={footerKbdStyle}>Esc</kbd> close
+              {" · "}
+              <kbd style={footerKbdStyle}>?</kbd> to reopen
             </p>
           </div>
         )}
