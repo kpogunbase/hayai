@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 interface OnboardingSpotlightProps {
   targetRect: DOMRect | null;
@@ -14,19 +14,18 @@ export function OnboardingSpotlight({
   allowInteraction = false,
 }: OnboardingSpotlightProps) {
   const [isAnimated, setIsAnimated] = useState(false);
+  const hasAnimatedIn = useRef(false);
 
   useEffect(() => {
-    // Trigger animation after mount
-    const timer = setTimeout(() => setIsAnimated(true), 50);
-    return () => clearTimeout(timer);
+    // Only animate in once on first mount, then stay visible
+    if (!hasAnimatedIn.current) {
+      const timer = setTimeout(() => {
+        setIsAnimated(true);
+        hasAnimatedIn.current = true;
+      }, 50);
+      return () => clearTimeout(timer);
+    }
   }, []);
-
-  // Reset animation when target changes
-  useEffect(() => {
-    setIsAnimated(false);
-    const timer = setTimeout(() => setIsAnimated(true), 50);
-    return () => clearTimeout(timer);
-  }, [targetRect?.top, targetRect?.left]);
 
   if (!targetRect) return null;
 
@@ -44,8 +43,11 @@ export function OnboardingSpotlight({
     `,
     transform: isAnimated ? "scale(1)" : "scale(0.95)",
     opacity: isAnimated ? 1 : 0,
-    transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+    // Use separate transitions for smoother mobile performance
+    transition: "top 0.2s ease-out, left 0.2s ease-out, width 0.2s ease-out, height 0.2s ease-out, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease-out",
     pointerEvents: "none",
+    // GPU acceleration
+    willChange: "transform, opacity",
   };
 
   return (

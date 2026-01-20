@@ -115,7 +115,6 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
 
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [isVisible, setIsVisible] = useState(false);
-  const [isTooltipReady, setIsTooltipReady] = useState(false);
   const isMobile = useIsMobile();
 
   // Fade in on mount
@@ -127,23 +126,6 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
       setIsVisible(false);
     }
   }, [isActive]);
-
-  // Delay tooltip visibility to prevent flash when position/state changes
-  useEffect(() => {
-    setIsTooltipReady(false);
-    // Use requestAnimationFrame + setTimeout for smoother transition
-    let frameId: number;
-    let timerId: NodeJS.Timeout;
-
-    frameId = requestAnimationFrame(() => {
-      timerId = setTimeout(() => setIsTooltipReady(true), 150);
-    });
-
-    return () => {
-      cancelAnimationFrame(frameId);
-      clearTimeout(timerId);
-    };
-  }, [currentStep, showStepCelebration]);
 
   // Update target rect when step changes
   useEffect(() => {
@@ -305,8 +287,9 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
           style={{
             position: "absolute",
             inset: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.85)",
-            backdropFilter: "blur(8px)",
+            backgroundColor: isMobile ? "rgba(0, 0, 0, 0.9)" : "rgba(0, 0, 0, 0.85)",
+            backdropFilter: isMobile ? "none" : "blur(8px)",
+            WebkitBackdropFilter: isMobile ? "none" : "blur(8px)",
           }}
         />
       )}
@@ -317,9 +300,9 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
           style={{
             position: "absolute",
             inset: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.6)",
-            backdropFilter: "blur(4px)",
-            transition: "opacity 0.3s ease",
+            backgroundColor: isMobile ? "rgba(0, 0, 0, 0.7)" : "rgba(0, 0, 0, 0.6)",
+            backdropFilter: isMobile ? "none" : "blur(4px)",
+            WebkitBackdropFilter: isMobile ? "none" : "blur(4px)",
             zIndex: 999,
           }}
         />
@@ -640,14 +623,12 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
       )}
 
       {/* Tooltip for targeted steps */}
-      {!isFullScreen && isTooltipReady && (
+      {!isFullScreen && (
         <OnboardingTooltip
-          key={`${currentStep}-${showStepCelebration}`}
           title={config.title}
           description={isMobile && config.mobileDescription ? config.mobileDescription : config.description}
           keyboardHint={isMobile ? undefined : config.keyboardHint}
           position={config.tooltipPosition}
-          // Center the tooltip during celebration (except shortcuts which targets modal)
           targetRect={showStepCelebration && currentStep !== "shortcuts" ? null : targetRect}
           showSuccess={showStepCelebration}
           successMessage={celebrationMessage}

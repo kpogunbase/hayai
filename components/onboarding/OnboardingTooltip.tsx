@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 interface OnboardingTooltipProps {
   title: string;
@@ -28,11 +28,17 @@ export function OnboardingTooltip({
   isMobile = false,
 }: OnboardingTooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const hasAnimatedIn = useRef(false);
 
   useEffect(() => {
-    // Animate in
-    const timer = setTimeout(() => setIsVisible(true), 100);
-    return () => clearTimeout(timer);
+    // Only animate in once on first mount
+    if (!hasAnimatedIn.current) {
+      const timer = setTimeout(() => {
+        setIsVisible(true);
+        hasAnimatedIn.current = true;
+      }, 50);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   // Calculate position based on target rect
@@ -157,8 +163,9 @@ export function OnboardingTooltip({
           ? "0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 4px rgba(16, 185, 129, 0.3), 0 0 60px rgba(16, 185, 129, 0.2)"
           : "0 20px 40px rgba(0, 0, 0, 0.3)",
         opacity: isVisible ? 1 : 0,
-        transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        transition: "opacity 0.2s ease-out, transform 0.2s ease-out, background 0.2s ease-out, box-shadow 0.2s ease-out",
         zIndex: 1001,
+        willChange: "transform, opacity",
       }}
     >
       {/* Arrow */}
