@@ -81,6 +81,7 @@ interface PreOnboardingIntroProps {
 }
 
 export function PreOnboardingIntro({ onComplete }: PreOnboardingIntroProps) {
+  const [hasStarted, setHasStarted] = useState(false);
   const [currentWord, setCurrentWord] = useState("");
   const [currentWpm, setCurrentWpm] = useState(INTRO_SEGMENTS[0].wpm);
   const [isVisible, setIsVisible] = useState(true);
@@ -138,15 +139,23 @@ export function PreOnboardingIntro({ onComplete }: PreOnboardingIntroProps) {
     fadeOutAndComplete();
   }, [fadeOutAndComplete]);
 
-  // Main playback loop - runs once on mount
+  // Handle starting the intro (requires user interaction for audio)
+  const handleStart = useCallback(() => {
+    if (hasStarted) return;
+    setHasStarted(true);
+  }, [hasStarted]);
+
+  // Main playback loop - runs when user starts the intro
   useEffect(() => {
+    if (!hasStarted) return;
+
     // Create and configure audio element
     const audio = new Audio(FOCUS_TRACK_SRC);
     audio.loop = true;
     audio.volume = 0.35;
     audioRef.current = audio;
 
-    // Start playing immediately
+    // Start playing - will work because user has interacted
     audio.play().catch((err) => {
       console.log("Audio autoplay blocked:", err);
     });
@@ -223,30 +232,168 @@ export function PreOnboardingIntro({ onComplete }: PreOnboardingIntroProps) {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty deps - run once on mount
+  }, [hasStarted]); // Run when user starts
 
-  // Update progress bar
+  // Update progress bar (only when started)
   useEffect(() => {
+    if (!hasStarted) return;
+
     const progressInterval = setInterval(() => {
       const elapsed = Date.now() - startTimeRef.current;
       setProgress(Math.min((elapsed / totalDuration) * 100, 100));
     }, 100);
 
     return () => clearInterval(progressInterval);
-  }, []);
+  }, [hasStarted]);
 
   // Keyboard handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" || e.key === "Enter" || e.code === "Space") {
         e.preventDefault();
-        handleSkip();
+        if (!hasStarted) {
+          handleStart();
+        } else {
+          handleSkip();
+        }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleSkip]);
+  }, [hasStarted, handleStart, handleSkip]);
+
+  // Show "tap to begin" screen before starting
+  if (!hasStarted) {
+    return (
+      <div
+        onClick={handleStart}
+        style={{
+          position: "fixed",
+          inset: 0,
+          backgroundColor: "#000",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999,
+          cursor: "pointer",
+        }}
+      >
+        {/* Animated logo/icon */}
+        <div
+          style={{
+            width: "80px",
+            height: "80px",
+            borderRadius: "20px",
+            background: "var(--accent-gradient, linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%))",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: "32px",
+            boxShadow: "0 0 60px rgba(99, 102, 241, 0.5)",
+            animation: "pulse 2s ease-in-out infinite",
+          }}
+        >
+          <svg
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#fff"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+          </svg>
+        </div>
+
+        {/* Title */}
+        <h1
+          style={{
+            fontSize: "clamp(24px, 6vw, 36px)",
+            fontWeight: 500,
+            color: "#fff",
+            margin: "0 0 16px",
+            letterSpacing: "0.2em",
+            textTransform: "uppercase",
+          }}
+        >
+          Hayai
+        </h1>
+
+        {/* Subtitle */}
+        <p
+          style={{
+            fontSize: "16px",
+            color: "rgba(255, 255, 255, 0.6)",
+            margin: "0 0 48px",
+          }}
+        >
+          Speed Reading Reimagined
+        </p>
+
+        {/* Tap to begin button */}
+        <button
+          onClick={handleStart}
+          style={{
+            padding: "16px 48px",
+            fontSize: "16px",
+            fontWeight: 600,
+            color: "#fff",
+            background: "var(--accent-gradient, linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%))",
+            border: "none",
+            borderRadius: "12px",
+            cursor: "pointer",
+            transition: "transform 0.15s, box-shadow 0.15s",
+            boxShadow: "0 4px 20px rgba(99, 102, 241, 0.4)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "scale(1.02)";
+            e.currentTarget.style.boxShadow = "0 6px 24px rgba(99, 102, 241, 0.5)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "scale(1)";
+            e.currentTarget.style.boxShadow = "0 4px 20px rgba(99, 102, 241, 0.4)";
+          }}
+        >
+          Tap to Begin
+        </button>
+
+        {/* Keyboard hint */}
+        <p
+          style={{
+            position: "absolute",
+            bottom: "32px",
+            fontSize: "13px",
+            color: "rgba(255, 255, 255, 0.4)",
+          }}
+        >
+          or press <kbd style={{
+            display: "inline-block",
+            padding: "2px 8px",
+            fontSize: "12px",
+            backgroundColor: "rgba(255, 255, 255, 0.1)",
+            borderRadius: "4px",
+            margin: "0 4px",
+          }}>Space</kbd> to start
+        </p>
+
+        <style jsx>{`
+          @keyframes pulse {
+            0%, 100% {
+              box-shadow: 0 0 60px rgba(99, 102, 241, 0.5);
+            }
+            50% {
+              box-shadow: 0 0 80px rgba(99, 102, 241, 0.7);
+            }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   return (
     <div

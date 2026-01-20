@@ -127,11 +127,14 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
     }
   }, [isActive]);
 
-  // Auto-skip navigate step on mobile (arrow keys aren't available)
+  // Auto-skip steps that aren't relevant on mobile
   useEffect(() => {
-    if (isActive && isMobile && currentStep === "navigate") {
-      // Skip immediately to the next step
-      nextStep();
+    if (isActive && isMobile) {
+      // Skip navigate step (arrow keys aren't available on mobile)
+      // Skip shortcuts step (keyboard shortcuts aren't relevant on mobile)
+      if (currentStep === "navigate" || currentStep === "shortcuts") {
+        nextStep();
+      }
     }
   }, [isActive, isMobile, currentStep, nextStep]);
 
