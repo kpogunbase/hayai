@@ -66,17 +66,6 @@ const STEP_CONFIGS: Record<OnboardingStep, StepConfig> = {
     tooltipPosition: "bottom",
     mobileDescription: "Keep your eyes on the red letter. This is the focus point — your brain will absorb each word as it appears.",
   },
-  navigate: {
-    title: "Navigate through text",
-    description: "Use arrow keys to skip forward or back through the text.",
-    keyboardHint: "← →",
-    targetSelector: "[data-onboarding='rsvp-display']",
-    tooltipPosition: "bottom",
-    // Mobile: use the arrow buttons
-    mobileDescription: "Use the arrow buttons to skip forward or back through the text.",
-    mobileActionLabel: "Try the arrow buttons",
-    mobileTargetSelector: "[data-onboarding='reader-controls']",
-  },
   speed: {
     title: "Adjust your speed",
     description: "Gradual Increase is on by default, ramping speed as you read. Toggle it off to manually control WPM.",
@@ -139,9 +128,8 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
   // Auto-skip steps that aren't relevant on mobile
   useEffect(() => {
     if (isActive && isMobile) {
-      // Skip navigate step (arrow keys aren't available on mobile)
       // Skip shortcuts step (keyboard shortcuts aren't relevant on mobile)
-      if (currentStep === "navigate" || currentStep === "shortcuts") {
+      if (currentStep === "shortcuts") {
         nextStep();
       }
     }
@@ -173,6 +161,16 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
           setTargetRect(null);
         }
       };
+
+      // For upload step, scroll target into view to ensure visibility
+      if (currentStep === "upload") {
+        const element = document.querySelector(selector);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+          // Wait for scroll to complete before updating rect
+          setTimeout(updateRect, 300);
+        }
+      }
 
       // Initial update
       updateRect();

@@ -505,13 +505,11 @@ export default function ReaderPage() {
         case "ArrowLeft":
           e.preventDefault();
           handleBack();
-          if (onboardingActive) reportOnboardingAction("arrow");
-          break;
+                    break;
         case "ArrowRight":
           e.preventDefault();
           handleForward();
-          if (onboardingActive) reportOnboardingAction("arrow");
-          break;
+                    break;
         case "KeyR":
           e.preventDefault();
           handleRestart();
@@ -1067,13 +1065,11 @@ export default function ReaderPage() {
             onBack={() => {
               handleBack();
               // Report to onboarding when button is clicked (for mobile)
-              if (onboardingActive) reportOnboardingAction("arrow");
-            }}
+                          }}
             onForward={() => {
               handleForward();
               // Report to onboarding when button is clicked (for mobile)
-              if (onboardingActive) reportOnboardingAction("arrow");
-            }}
+                          }}
             currentIndex={index}
             totalTokens={tokens.length}
           />

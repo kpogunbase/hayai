@@ -333,7 +333,6 @@ Run each check for at least 60–120 seconds to catch drift.
 - [ ] Upload step: highlights upload area, completes on file upload
 - [ ] Play step: highlights play button, completes on `Space` key
 - [ ] Focus step: explains ORP (red letter), manual advance with Enter/button
-- [ ] Navigate step: highlights controls, completes on arrow key
 - [ ] Speed step: highlights WPM slider, allows slider interaction
 - [ ] Shortcuts step: highlights shortcuts modal, completes on `?` key
 

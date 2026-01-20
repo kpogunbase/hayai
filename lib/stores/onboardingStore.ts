@@ -5,7 +5,6 @@ export type OnboardingStep =
   | 'upload'
   | 'play'
   | 'focus'
-  | 'navigate'
   | 'speed'
   | 'shortcuts'
   | 'complete';
@@ -15,14 +14,13 @@ const STEP_ORDER: OnboardingStep[] = [
   'upload',
   'play',
   'focus',
-  'navigate',
   'speed',
   'shortcuts',
   'complete',
 ];
 
 // Actions that can complete interactive steps
-type OnboardingAction = 'space' | 'arrow' | 'wpm' | 'help' | 'upload';
+type OnboardingAction = 'space' | 'wpm' | 'help' | 'upload';
 
 // Map of which action completes which step
 const STEP_ACTIONS: Record<OnboardingStep, OnboardingAction | null> = {
@@ -30,7 +28,6 @@ const STEP_ACTIONS: Record<OnboardingStep, OnboardingAction | null> = {
   upload: 'upload',
   play: 'space',
   focus: null, // Manual advance - educational step about ORP
-  navigate: 'arrow',
   speed: null, // Manual advance only (button click or Enter key)
   shortcuts: 'help',
   complete: null, // Final step
@@ -202,7 +199,6 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       // Show celebration briefly, then advance
       const messages: Record<OnboardingAction, string> = {
         space: 'Perfect! Space plays and pauses',
-        arrow: 'Nice! Use arrows to navigate',
         wpm: 'Great! Adjust speed anytime',
         help: 'You found all shortcuts!',
         upload: 'Text loaded!',
