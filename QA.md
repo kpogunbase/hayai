@@ -52,6 +52,54 @@ This checklist covers all features of Hayai, including the core RSVP reader, lib
 
 ---
 
+## 2.8 Upload/Paste Modal from Reader
+
+### Opening the Modal
+- [ ] Press `U` key on reader page → modal opens
+- [ ] Modal has two tabs: Upload and Paste
+- [ ] Default tab is Upload
+
+### Upload Tab
+- [ ] `Shift+U` opens file dialog
+- [ ] Drag and drop file works
+- [ ] Click dropzone opens file dialog
+- [ ] Upload valid file → reader loads new content
+- [ ] Upload invalid file → shows error message
+- [ ] After successful upload, playback is stopped and index is reset to 0
+
+### Paste Tab
+- [ ] Press `Tab` → switches between Upload/Paste tabs
+- [ ] Press `2` → selects Paste tab
+- [ ] `Shift+P` → switches to Paste and focuses textarea
+- [ ] Title input is optional (auto-generates if empty)
+- [ ] Textarea accepts text input and paste
+- [ ] Word count updates in real-time
+- [ ] Validation: shows error if < 10 words
+- [ ] Validation: shows error if > 500K characters
+- [ ] `Cmd/Ctrl+Enter` submits pasted text
+- [ ] After successful submit, reader loads new content
+
+### Modal Keyboard Navigation
+- [ ] `Tab` cycles between Upload/Paste tabs
+- [ ] `1` selects Upload tab
+- [ ] `2` selects Paste tab
+- [ ] `Escape` closes modal
+- [ ] Shortcuts don't trigger when typing in textarea/input
+
+### Content Loading
+- [ ] New content replaces current content
+- [ ] Document is saved to library
+- [ ] Playback stops when new content loads
+- [ ] Index resets to 0
+- [ ] Challenge/Gradual mode state resets appropriately
+
+### Mobile Responsiveness
+- [ ] Modal displays as bottom sheet on mobile
+- [ ] All buttons and inputs are touch-friendly
+- [ ] Keyboard hints hidden on mobile
+
+---
+
 ## 3) Tokenization
 
 - [ ] Token count matches expectations (roughly words in the document)
@@ -347,7 +395,8 @@ Run each check for at least 60–120 seconds to catch drift.
 | `G` | Toggle Gradual Increase | [ ] |
 | `+` / `=` | Increase WPM | [ ] |
 | `-` | Decrease WPM | [ ] |
-| `N` | New file (go to upload) | [ ] |
+| `U` | Open upload/paste modal | [ ] |
+| `N` | Go home | [ ] |
 | `S` | Toggle Side Panel | [ ] |
 | `L` | Toggle Library | [ ] |
 | `B` | Add Bookmark | [ ] |

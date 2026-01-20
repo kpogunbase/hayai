@@ -114,6 +114,8 @@ hayai/
 │   ├── library/
 │   │   ├── LibraryPanel.tsx         # Document library sidebar
 │   │   └── LibraryItem.tsx          # Individual library entry
+│   ├── reader/
+│   │   └── UploadPasteModal.tsx     # Upload/paste modal for reader page
 │   ├── sidepanel/
 │   │   └── SidePanel.tsx            # Document overview panel
 │   ├── upload/
@@ -286,7 +288,8 @@ interface OnboardingState {
 | `M` | Toggle Reading / Challenge mode |
 | `G` | Toggle Gradual Increase |
 | `+` / `-` | Increase / Decrease WPM |
-| `N` | New file (go to upload) |
+| `U` | Upload / paste new content |
+| `N` | Go home |
 | `S` | Toggle Side Panel |
 | `L` | Toggle Library |
 | `B` | Add Bookmark |

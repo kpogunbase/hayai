@@ -89,7 +89,8 @@ Hayai is a modern speed reading web application that uses RSVP (Rapid Serial Vis
 | `M` | Toggle Reading / Challenge mode |
 | `G` | Toggle Gradual Increase |
 | `+` / `-` | Increase / Decrease WPM |
-| `N` | New file (go to upload) |
+| `U` | Upload / paste new content |
+| `N` | Go home |
 | `S` | Toggle Side Panel |
 | `L` | Toggle Library |
 | `B` | Add Bookmark |
@@ -126,6 +127,7 @@ hayai/
 ├── components/
 │   ├── onboarding/        # Pre-intro, overlay, spotlight, tooltip
 │   ├── library/           # Library panel components
+│   ├── reader/            # Reader-specific components (UploadPasteModal)
 │   ├── sidepanel/         # Side panel for document overview
 │   ├── upload/            # Upload and paste text modals
 │   ├── RsvpWord.tsx       # ORP word display

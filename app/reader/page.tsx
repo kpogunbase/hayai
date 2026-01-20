@@ -16,6 +16,7 @@ import { AnalyticsModal } from "@/components/AnalyticsModal";
 import { CelebrationOverlay, useCelebration } from "@/components/CelebrationOverlay";
 import { OnboardingOverlay } from "@/components/onboarding/OnboardingOverlay";
 import { ProfileSettingsModal } from "@/components/ProfileSettingsModal";
+import { UploadPasteModal } from "@/components/reader/UploadPasteModal";
 import { useAuth } from "@/components/AuthProvider";
 import { useAudio } from "@/lib/useAudio";
 import { intervalForToken } from "@/lib/reader/timing";
@@ -65,6 +66,7 @@ export default function ReaderPage() {
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isUploadPasteModalOpen, setIsUploadPasteModalOpen] = useState(false);
 
   // Celebration hook
   const { celebration, celebrate, clear: clearCelebration } = useCelebration();
@@ -454,6 +456,36 @@ export default function ReaderPage() {
     readerStore.setDocument(doc.id, newTokens, doc.rawText);
   }, [readerStore]);
 
+  // Handle new content from upload/paste modal
+  const handleNewContent = useCallback((newDocumentId: string, newTokens: string[], newRawText: string) => {
+    // Stop playback if currently playing
+    if (isPlaying) {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      setIsPlaying(false);
+      audio.pause();
+    }
+
+    // Update reader state with new content
+    setTokens(newTokens);
+    setDocumentId(newDocumentId);
+    setRawText(newRawText);
+    setIndex(0);
+
+    // Reset mode-related state
+    setChallengeStartTime(null);
+    setCurrentChallengeWpm(DEFAULT_CHALLENGE_CONFIG.startWpm);
+    setCurrentGradualStage(0);
+
+    // Update reader store
+    readerStore.setDocument(newDocumentId, newTokens, newRawText);
+
+    // Close the modal
+    setIsUploadPasteModalOpen(false);
+  }, [isPlaying, audio, readerStore]);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -528,9 +560,16 @@ export default function ReaderPage() {
           // Navigate back to homepage for new file
           router.push("/");
           break;
+        case "KeyU":
+          e.preventDefault();
+          // Open upload/paste modal
+          setIsUploadPasteModalOpen(true);
+          break;
         case "Escape":
           e.preventDefault();
-          if (isProfileModalOpen) {
+          if (isUploadPasteModalOpen) {
+            setIsUploadPasteModalOpen(false);
+          } else if (isProfileModalOpen) {
             setIsProfileModalOpen(false);
           } else if (isAnalyticsModalOpen) {
             setIsAnalyticsModalOpen(false);
@@ -612,7 +651,7 @@ export default function ReaderPage() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handlePlayPause, handleBack, handleForward, handleRestart, handleBookmark, handleToggleHighlight, handleModeChange, router, isSidePanelOpen, isLibraryOpen, isShortcutsModalOpen, isFeedbackModalOpen, isAnalyticsModalOpen, isProfileModalOpen, onboardingActive, reportOnboardingAction, mode, audio, gradualIncrease, isPlaying, user]);
+  }, [handlePlayPause, handleBack, handleForward, handleRestart, handleBookmark, handleToggleHighlight, handleModeChange, router, isSidePanelOpen, isLibraryOpen, isShortcutsModalOpen, isFeedbackModalOpen, isAnalyticsModalOpen, isProfileModalOpen, isUploadPasteModalOpen, onboardingActive, reportOnboardingAction, mode, audio, gradualIncrease, isPlaying, user]);
 
   // Loading state
   if (!isLoaded) {
@@ -1096,9 +1135,9 @@ export default function ReaderPage() {
             <span><kbd style={kbdStyle}>←</kbd><kbd style={kbdStyle}>→</kbd> Skip</span>
             <span><kbd style={kbdStyle}>R</kbd> Restart</span>
             <span><kbd style={kbdStyle}>G</kbd> Gradual</span>
+            <span><kbd style={kbdStyle}>U</kbd> Upload</span>
             <span><kbd style={kbdStyle}>S</kbd> Side Panel</span>
             <span><kbd style={kbdStyle}>B</kbd> Bookmark</span>
-            <span><kbd style={kbdStyle}>H</kbd> Highlight</span>
             <span><kbd style={kbdStyle}>?</kbd> Help</span>
           </div>
         )}
@@ -1146,6 +1185,13 @@ export default function ReaderPage() {
       <ProfileSettingsModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
+      />
+
+      {/* Upload/Paste Modal */}
+      <UploadPasteModal
+        isOpen={isUploadPasteModalOpen}
+        onClose={() => setIsUploadPasteModalOpen(false)}
+        onContentLoaded={handleNewContent}
       />
 
       {/* Celebration Overlay */}
