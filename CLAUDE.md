@@ -228,7 +228,7 @@ interface StatsState {
 ### onboardingStore (`lib/stores/onboardingStore.ts`)
 ```typescript
 type OnboardingStep =
-  | 'welcome' | 'upload' | 'play'
+  | 'welcome' | 'upload' | 'play' | 'focus'
   | 'navigate' | 'speed' | 'shortcuts' | 'complete'
 
 interface OnboardingState {
@@ -339,7 +339,7 @@ interface OnboardingState {
   - Showcases speed progression from 200 to 400 WPM
   - Audio fades out on completion/skip
   - Skippable via Space, Enter, Esc, or button
-- Interactive 7-step tutorial
+- Interactive 8-step tutorial (includes ORP focus explanation)
 - Spotlight effects on UI elements
 - Keyboard-driven progression
 - Celebration animations on completion

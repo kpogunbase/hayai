@@ -4,6 +4,7 @@ export type OnboardingStep =
   | 'welcome'
   | 'upload'
   | 'play'
+  | 'focus'
   | 'navigate'
   | 'speed'
   | 'shortcuts'
@@ -13,6 +14,7 @@ const STEP_ORDER: OnboardingStep[] = [
   'welcome',
   'upload',
   'play',
+  'focus',
   'navigate',
   'speed',
   'shortcuts',
@@ -27,6 +29,7 @@ const STEP_ACTIONS: Record<OnboardingStep, OnboardingAction | null> = {
   welcome: null, // Manual advance
   upload: 'upload',
   play: 'space',
+  focus: null, // Manual advance - educational step about ORP
   navigate: 'arrow',
   speed: null, // Manual advance only (button click or Enter key)
   shortcuts: 'help',

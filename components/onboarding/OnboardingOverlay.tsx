@@ -57,6 +57,15 @@ const STEP_CONFIGS: Record<OnboardingStep, StepConfig> = {
     mobileActionLabel: "Tap play button below",
     mobileTargetSelector: "[data-onboarding='reader-controls']",
   },
+  focus: {
+    title: "Focus on the red letter",
+    description: "Keep your eyes fixed on the highlighted letter. This is the Optimal Recognition Point — your brain will naturally absorb each word as it flows past.",
+    actionLabel: "Got it",
+    keyboardHint: "Enter",
+    targetSelector: "[data-onboarding='rsvp-display']",
+    tooltipPosition: "bottom",
+    mobileDescription: "Keep your eyes on the red letter. This is the focus point — your brain will absorb each word as it appears.",
+  },
   navigate: {
     title: "Navigate through text",
     description: "Use arrow keys to skip forward or back through the text.",
@@ -217,6 +226,15 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
         return;
       }
 
+      // Focus step - Enter to continue (educational step about ORP)
+      if (currentStep === "focus") {
+        if (e.code === "Enter") {
+          e.preventDefault();
+          nextStep();
+        }
+        return;
+      }
+
       // Speed step - Enter to continue
       if (currentStep === "speed") {
         if (e.code === "Enter") {
@@ -264,6 +282,9 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
           document.dispatchEvent(spaceEvent);
           // The space key handler will call reportAction("space")
         }
+        break;
+      case "focus":
+        nextStep();
         break;
       case "speed":
         nextStep();

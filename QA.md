@@ -332,9 +332,19 @@ Run each check for at least 60–120 seconds to catch drift.
 ### 15.2 Interactive Steps
 - [ ] Upload step: highlights upload area, completes on file upload
 - [ ] Play step: highlights play button, completes on `Space` key
+- [ ] Focus step: explains ORP (red letter), manual advance with Enter/button
 - [ ] Navigate step: highlights controls, completes on arrow key
 - [ ] Speed step: highlights WPM slider, allows slider interaction
 - [ ] Shortcuts step: highlights shortcuts modal, completes on `?` key
+
+### 15.2.1 Focus Step (ORP Explanation)
+- [ ] Appears after play step, before navigate step
+- [ ] Title shows "Focus on the red letter"
+- [ ] Description explains ORP concept clearly
+- [ ] Spotlights the RSVP display area
+- [ ] "Got it" button advances to next step
+- [ ] `Enter` key advances to next step
+- [ ] Mobile description is condensed but clear
 
 ### 15.3 Step Transitions
 - [ ] Success message shows with gradient background
