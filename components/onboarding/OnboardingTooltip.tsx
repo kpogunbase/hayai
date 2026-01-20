@@ -60,6 +60,31 @@ export function OnboardingTooltip({
       position: "fixed",
     };
 
+    // On mobile, check if tooltip would be off-screen and use fixed center positioning
+    if (isMobile) {
+      const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 800;
+      const tooltipEstimatedHeight = 150; // Approximate height of tooltip
+
+      // If the target is near top and tooltip would go below viewport, center it
+      if (position === "bottom" && targetRect.bottom + tooltipEstimatedHeight > viewportHeight) {
+        return {
+          ...baseStyle,
+          top: "50%",
+          left: "50%",
+          transform: `translate(-50%, -50%) ${isVisible ? "translateY(0)" : "translateY(20px)"}`,
+        };
+      }
+      // If the target is near bottom and tooltip would go above viewport, center it
+      if (position === "top" && targetRect.top - tooltipEstimatedHeight < 0) {
+        return {
+          ...baseStyle,
+          top: "50%",
+          left: "50%",
+          transform: `translate(-50%, -50%) ${isVisible ? "translateY(0)" : "translateY(20px)"}`,
+        };
+      }
+    }
+
     switch (position) {
       case "top":
         return {
@@ -94,7 +119,29 @@ export function OnboardingTooltip({
     }
   };
 
+  // Check if tooltip is centered (no arrow needed)
+  const isTooltipCentered = (): boolean => {
+    if (!targetRect) return true;
+    if (!isMobile) return false;
+
+    const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 800;
+    const tooltipEstimatedHeight = 150;
+
+    if (position === "bottom" && targetRect.bottom + tooltipEstimatedHeight > viewportHeight) {
+      return true;
+    }
+    if (position === "top" && targetRect.top - tooltipEstimatedHeight < 0) {
+      return true;
+    }
+    return false;
+  };
+
   const getArrowStyle = (): React.CSSProperties => {
+    // Hide arrow when tooltip is centered
+    if (isTooltipCentered()) {
+      return { display: "none" };
+    }
+
     const baseStyle: React.CSSProperties = {
       position: "absolute",
       width: 0,

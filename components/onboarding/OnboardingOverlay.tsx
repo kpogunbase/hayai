@@ -127,6 +127,14 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
     }
   }, [isActive]);
 
+  // Auto-skip navigate step on mobile (arrow keys aren't available)
+  useEffect(() => {
+    if (isActive && isMobile && currentStep === "navigate") {
+      // Skip immediately to the next step
+      nextStep();
+    }
+  }, [isActive, isMobile, currentStep, nextStep]);
+
   // Update target rect when step changes
   useEffect(() => {
     if (!isActive) return;
@@ -241,6 +249,18 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
           onLoadDemoText(DEMO_TEXT);
         }
         reportAction("upload");
+        break;
+      case "play":
+        // On mobile, simulate Space key to trigger playback
+        if (isMobile) {
+          const spaceEvent = new KeyboardEvent("keydown", {
+            key: " ",
+            code: "Space",
+            bubbles: true,
+          });
+          document.dispatchEvent(spaceEvent);
+          // The space key handler will call reportAction("space")
+        }
         break;
       case "speed":
         nextStep();
