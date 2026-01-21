@@ -54,7 +54,7 @@ const STEP_CONFIGS: Record<OnboardingStep, StepConfig> = {
     tooltipPosition: "bottom",
     // Mobile: tap the play button
     mobileDescription: "Tap the play button to start and pause your reading session.",
-    mobileActionLabel: "Tap play button below",
+    mobileActionLabel: "Tap play",
     mobileTargetSelector: "[data-onboarding='reader-controls']",
   },
   focus: {
@@ -354,7 +354,7 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
       {!isFullScreen && targetRect && (!showStepCelebration || currentStep === "shortcuts") && (
         <OnboardingSpotlight
           targetRect={targetRect}
-          allowInteraction={currentStep === "speed"}
+          allowInteraction={currentStep === "play" || currentStep === "speed"}
         />
       )}
 
