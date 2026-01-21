@@ -12,7 +12,7 @@ interface WpmSliderProps {
   currentStage?: number; // 0-4, shows which stage we're in when gradual is active
 }
 
-const MIN_WPM = 300;
+const MIN_WPM = 100;
 const MAX_WPM = 900;
 const STEP = 25;
 
@@ -205,7 +205,9 @@ export function WpmSlider({
                 padding: "0 2px",
               }}
             >
-              <span style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>300</span>
+              <span style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>100</span>
+              <span style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>250</span>
+              <span style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>400</span>
               <span style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>600</span>
               <span style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>900</span>
             </div>

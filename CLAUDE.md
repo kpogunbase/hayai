@@ -33,7 +33,7 @@ Hayai is a modern speed reading web application using RSVP (Rapid Serial Visual 
 ## Reading Modes
 
 ### 1. Reading Mode
-Manual WPM control via slider (300–900 WPM, step 10)
+Manual WPM control via slider (100–900 WPM, step 25)
 
 ### 2. Challenge Mode
 Automatic WPM ramp from 300 to 900 WPM over configurable duration (2m / 3m / 5m)
