@@ -196,20 +196,34 @@ export function WpmSlider({
               }}
             />
 
-            {/* Tick marks */}
+            {/* Tick marks - positioned at actual slider values */}
             <div
               style={{
-                display: "flex",
-                justifyContent: "space-between",
+                position: "relative",
                 marginTop: "4px",
-                padding: "0 2px",
+                height: "16px",
               }}
             >
-              <span style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>100</span>
-              <span style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>250</span>
-              <span style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>400</span>
-              <span style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>600</span>
-              <span style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>900</span>
+              {[
+                { value: 100, position: 0 },
+                { value: 250, position: 18.75 },
+                { value: 400, position: 37.5 },
+                { value: 600, position: 62.5 },
+                { value: 900, position: 100 },
+              ].map(({ value, position }) => (
+                <span
+                  key={value}
+                  style={{
+                    position: "absolute",
+                    left: `${position}%`,
+                    transform: position === 0 ? "none" : position === 100 ? "translateX(-100%)" : "translateX(-50%)",
+                    fontSize: "11px",
+                    color: "var(--text-tertiary)",
+                  }}
+                >
+                  {value}
+                </span>
+              ))}
             </div>
           </div>
         </>
