@@ -53,14 +53,16 @@ export function OnboardingSpotlight({
   return (
     <>
       {/* Full screen overlay - blocks clicks outside spotlight (unless allowInteraction) */}
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 999,
-          pointerEvents: allowInteraction ? "none" : "auto",
-        }}
-      />
+      {!allowInteraction && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 999,
+            pointerEvents: "auto",
+          }}
+        />
+      )}
 
       {/* Cutout highlight */}
       <div style={{ ...cutoutStyle, pointerEvents: "none" }}>

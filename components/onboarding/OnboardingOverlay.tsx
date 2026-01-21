@@ -321,6 +321,7 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
         zIndex: 998,
         opacity: isVisible ? 1 : 0,
         transition: "opacity 0.3s ease",
+        pointerEvents: "none",
       }}
     >
       {/* Background overlay for full-screen steps */}
@@ -332,6 +333,7 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
             backgroundColor: isMobile ? "rgba(0, 0, 0, 0.9)" : "rgba(0, 0, 0, 0.85)",
             backdropFilter: isMobile ? "none" : "blur(8px)",
             WebkitBackdropFilter: isMobile ? "none" : "blur(8px)",
+            pointerEvents: "auto",
           }}
         />
       )}
@@ -346,6 +348,7 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
             backdropFilter: isMobile ? "none" : "blur(4px)",
             WebkitBackdropFilter: isMobile ? "none" : "blur(4px)",
             zIndex: 999,
+            pointerEvents: "auto",
           }}
         />
       )}
@@ -369,6 +372,7 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
             alignItems: "center",
             justifyContent: "center",
             padding: "24px",
+            pointerEvents: "auto",
           }}
         >
           {/* Celebration particles for complete step */}

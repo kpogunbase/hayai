@@ -100,7 +100,7 @@ export function PreOnboardingIntro({ onComplete }: PreOnboardingIntroProps) {
     onCompleteRef.current = onComplete;
   }, [onComplete]);
 
-  // Fade out audio then call onComplete
+  // Fade out audio and visuals then call onComplete
   const fadeOutAndComplete = useCallback(() => {
     if (isCompletedRef.current) return;
     isCompletedRef.current = true;
@@ -109,6 +109,9 @@ export function PreOnboardingIntro({ onComplete }: PreOnboardingIntroProps) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
+
+    // Start visual fade immediately
+    setIsVisible(false);
 
     const audio = audioRef.current;
     if (audio && audio.volume > 0) {
@@ -130,7 +133,10 @@ export function PreOnboardingIntro({ onComplete }: PreOnboardingIntroProps) {
         }
       }, stepDuration);
     } else {
-      onCompleteRef.current();
+      // If no audio, still wait for visual fade before transitioning
+      setTimeout(() => {
+        onCompleteRef.current();
+      }, 500);
     }
   }, []);
 
