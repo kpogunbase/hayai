@@ -213,6 +213,7 @@ export function OnboardingTooltip({
         transition: "opacity 0.2s ease-out, transform 0.2s ease-out, background 0.2s ease-out, box-shadow 0.2s ease-out",
         zIndex: 1001,
         willChange: "transform, opacity",
+        pointerEvents: "auto",
       }}
     >
       {/* Arrow */}

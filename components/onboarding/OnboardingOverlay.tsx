@@ -321,7 +321,6 @@ export function OnboardingOverlay({ onLoadDemoText }: OnboardingOverlayProps) {
         zIndex: 998,
         opacity: isVisible ? 1 : 0,
         transition: "opacity 0.3s ease",
-        pointerEvents: "none",
       }}
     >
       {/* Background overlay for full-screen steps */}
